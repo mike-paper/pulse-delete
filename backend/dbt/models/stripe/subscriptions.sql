@@ -15,3 +15,4 @@ to_timestamp((s.details ->> 'start_date')::int) as "start_dt"
 from 
 public.stripe_subscriptions as s left join
 {{ref('customers')}} as c on (s.details ->> 'customer') = c.customer_id
+where team_id = {{ env_var('PAPER_DBT_TEAM_ID') }} 

@@ -53,49 +53,7 @@ objs = {
 def getAll(engine, teamId):
     for key, obj in objs.items():
         longrun.submit(getObject, engine, teamId, key)
-
-def getExistingSubscriptions(engine, teamId):
-    sql = f'''
-    select details ->> 'id' as subscription_id
-    from "public".stripe_subscriptions as t
-    where t.team_id = {teamId}
-    '''
-    df = pd.read_sql(sql, engine)
-    return df.subscription_id.tolist()
-
-def getCustomers(engine, teamId):
-    apiKey = pints.pints.postgres.getStripeApiKey(engine, teamId)
-    logger.info(f'getCustomers mr: {apiKey}')
-    mr = pints.postgres.getMaxRecord(engine, 'stripe_customers', teamId)
-    logger.info(f'getCustomers mr: {mr}')
-    if mr:
-        logger.info(f'getCustomers with mr: {mr}')
-        temp = stripe.Customer.list(limit=100, api_key=apiKey, created={'gt': mr})
-    else:
-        logger.info(f'getCustomers without mr: {mr}')
-        temp = stripe.Customer.list(limit=100, api_key=apiKey)
-    ls = []
-    for t in temp.auto_paging_iter():
-        ls.append(t)
-    logger.info(f'getCustomers done, got {len(ls)}')
-    return ls
-
-def getPlans(engine, teamId):
-    apiKey = pints.pints.postgres.getStripeApiKey(engine, teamId)
-    table = 'stripe_plans'
-    mr = pints.postgres.getMaxRecord(engine, table, teamId)
-    logger.info(f'getPlans mr: {mr}')
-    if mr:
-        logger.info(f'getPlans with mr: {mr}')
-        temp = stripe.Plan.list(limit=100, api_key=apiKey, created={'gt': mr})
-    else:
-        logger.info(f'getPlans without mr: {mr}')
-        temp = stripe.Plan.list(limit=100, api_key=apiKey)
-    ls = []
-    for t in temp.auto_paging_iter():
-        ls.append(t)
-    pints.postgres.insertRows(engine, table, ls, teamId)
-    return ls
+    return True
 
 def getObject(engine, teamId, obj):
     apiKey = pints.pints.postgres.getStripeApiKey(engine, teamId)
@@ -124,36 +82,3 @@ def getObject(engine, teamId, obj):
     pints.postgres.insertRows(engine, table, ls, teamId)
     logger.info(f'done inserting rows for {obj} ({len(ls)} rows)')
     return ls
-
-def getSubscriptions(engine, teamId):
-    apiKey = pints.pints.postgres.getStripeApiKey(engine, teamId)
-    mr = pints.postgres.getMaxRecord(engine, 'stripe_subscriptions', teamId)
-    logger.info(f'getSubscriptions mr: {mr}')
-    if mr:
-        logger.info(f'getSubscriptions with mr: {mr}')
-        temp = stripe.Subscription.list(limit=100, status='all', api_key=apiKey, created={'gt': mr})
-    else:
-        logger.info(f'getSubscriptions without mr: {mr}')
-        temp = stripe.Subscription.list(limit=100, status='all', api_key=apiKey)
-    ls = []
-    for t in temp.auto_paging_iter():
-        ls.append(t)
-    return ls
-
-def getOneSubscriptionItems(subscriptionId):
-    apiKey = pints.pints.postgres.getStripeApiKey(engine, teamId)
-    logger.info(f'getSubscriptionItems...')
-    temp = stripe.SubscriptionItem.list(api_key=apiKey, subscription=subscriptionId, limit=100)
-    ls = []
-    for t in temp.auto_paging_iter():
-        ls.append(t)
-    return ls
-
-def getSubscriptionItems(engine, teamId):
-    apiKey = pints.pints.postgres.getStripeApiKey(engine, teamId)
-    subs = getExistingSubscriptions(engine, teamId)
-    pints.postgres.deleteRows(engine, 'stripe_subscription_items', teamId)
-    for sub in subs:
-        logger.info(f'getAllSubscriptionItems: {sub}')
-        subItems = getOneSubscriptionItems(sub)
-        pints.postgres.insertRows(engine, 'stripe_subscription_items', subItems, teamId)

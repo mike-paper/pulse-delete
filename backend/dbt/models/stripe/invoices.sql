@@ -14,6 +14,7 @@ with invoices as (
 	from 
 	public.stripe_invoices as si 
 	where 1=1 
+	and team_id = {{ env_var('PAPER_DBT_TEAM_ID') }} 
 ), max_in_month as ( 
 	select customer_id, created_month, max(created_on) as created_on
 	from

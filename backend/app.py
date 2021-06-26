@@ -84,7 +84,7 @@ db = SQLAlchemy(app)
 
 # testStripe = pints.stripe.getObject(db.engine, 1, 'coupons')
 # testStripe = pints.stripe.getObject(db.engine, 1, 'invoices')
-# testStripe = pints.stripe.getAll(db.engine, 1)
+testStripe = pints.stripe.getAll(db.engine, 3)
 
 def getDbt():
     with open(r'./dbt/models/stripe/models.yml') as file:
@@ -93,6 +93,14 @@ def getDbt():
     return d
 
 # testStripe = getDbt()
+
+@app.route('/get_stripe', methods=["GET", "POST"])
+def get_stripe():
+    data = flask.request.get_json()
+    logger.info(f'get_stripe: {data}')
+    user = getUser(data)
+    res = pints.stripe.getAll(db.engine, user['team_id'])
+    return json.dumps({'ok' : True}), 200, {'ContentType':'application/json'}
 
 @app.route('/get_dbt', methods=["GET", "POST"])
 def get_dbt():

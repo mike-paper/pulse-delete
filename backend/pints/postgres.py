@@ -16,11 +16,11 @@ def insertRows(engine, table, rows, teamId):
                 "details": json.dumps(row)
                 }
             sql = f'''
-            INSERT INTO {table} (user_id, details) 
-            VALUES(:user_id, :details)
+            INSERT INTO {table} (team_id, details) 
+            VALUES(:team_id, :details)
             '''
             statement = sqlalchemy.sql.text(sql)
-            con.execute(statement, **d)
+            res = con.execute(statement, **d)
 
 def getMaxRecord(engine, table, teamId):
     with engine.connect() as con:

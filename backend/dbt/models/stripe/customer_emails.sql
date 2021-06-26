@@ -4,8 +4,9 @@ with emails as (
 	details ->> 'customer_email' as email, 
 	details ->> 'customer' as customer_id,
 	details ->> 'created' as created
-	from "public".stripe_invoices 
+	from public.stripe_invoices 
 	where details ->> 'customer_email' is not null
+	and team_id = {{ env_var('PAPER_DBT_TEAM_ID') }} 
 ), max_email as (
 	select
 	customer_id,

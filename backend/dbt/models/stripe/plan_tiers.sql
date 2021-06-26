@@ -4,6 +4,7 @@ with plans as (
 	jsonb_array_elements(details -> 'tiers') as tiers
 	from public.stripe_plans 
 	where details ->> 'tiers' is not null
+	and team_id = {{ env_var('PAPER_DBT_TEAM_ID') }} 
 	limit 100
 ), plans2 as (
 	select 
