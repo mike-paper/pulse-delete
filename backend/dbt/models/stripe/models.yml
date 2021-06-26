@@ -1,0 +1,141 @@
+version: 2
+
+models:
+  - name: customers
+    description: > 
+      Customers https://stripe.com/docs/api/customers
+    docs:
+      show: true
+    meta:
+      measures:
+        total:
+          type: count
+          label: Count
+        uniques:
+          sql: count(distinct(email))
+          label: Unique
+    columns:
+      - name: customer_id
+        description: Customer ID
+        meta:
+          dimension:
+            label: Customer ID
+      - name: email
+        description: Customer email
+        meta:
+          dimension:
+            label: Email
+          measures:
+            customers:
+              label: Customers
+              type: count
+      - name: created_on
+        description: Customer created on
+        meta:
+          dimension:
+            label: Customer Start Date
+            timeframes: [week, month, year]
+  - name: mrr_facts
+    description: > 
+      MRR (monthly recurring revenue) by month at customer level
+    docs:
+      show: true
+    meta:
+      label: Revenue History
+      # measures:
+      #   total:
+      #     aggregation: count
+      #     label: Count
+      #   customers:
+      #     sql: count(distinct(email))
+      #     label: Customers
+      #   mrr:
+      #     aggregation: sum
+      #     label: MRR
+      #   churned_mrr:
+      #     aggregation: sum
+      #     label: Churn
+      #   expansion_mrr:
+      #     aggregation: sum
+      #     label: Expansion
+      #   new_mrr:
+      #     aggregation: sum
+      #     label: New MRR
+    columns:
+      - name: email
+        description: Billing email for customer (get from Invoice if possible)
+        meta:
+          dimension:
+            label: Email
+          measures:
+            customers:
+              label: Customers
+              type: count
+      - name: plan_interval
+        description: Monthly or Yearly (Annual) 
+        tests:
+          - accepted_values:
+              values: ['month', 'year']
+        meta:
+          dimension:
+            label: Plan Interval
+      - name: mrr_month_dt
+        description: Data as of date (month)
+        meta:
+          dimension:
+            label: Month
+            timeframes: [week, month, year]
+      - name: mrr
+        description: MRR (monthly recurring revenue)
+        meta:
+          dimension:
+            label: MRR
+            format: $#,##0
+          measures:
+            mrr_sum:
+              label: Total MRR
+              type: sum
+              format: $#,##0
+            mrr_avg:
+              label: Avg MRR
+              type: avg
+              format: $#,##0
+      - name: churned_mrr
+        description: Churned MRR (monthly recurring revenue)
+        meta:
+          dimension:
+            label: Churned MRR
+          measures:
+            churned_mrr_sum:
+              label: Churned MRR
+              type: sum
+    # customer_id
+    # invoice_id
+    # subscription_id
+    # mrr_dt
+    # created_on
+    # total
+    # amount_due
+    # amount_off
+    # percent_off_precise
+    # coupon_duration
+    # plan_interval
+    # plan_id
+    # base_mrr
+    # canceled_dt
+    # discounted_mrr
+    # fully_discounted_mrr
+    # invoice_status
+    # mrr
+    # mrr_month_dt
+    # prev_mrr
+    # mrr_status
+    # churned_mrr
+    # expansion_mrr
+    # new_mrr
+    # prev_mrr_dt
+  # - name: invoices
+  #   description: > 
+  #     Invoices https://stripe.com/docs/api/invoices
+  #   docs:
+  #     show: true
