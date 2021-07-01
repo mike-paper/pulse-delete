@@ -38,7 +38,7 @@ def push(d):
                     "type": "header",
                     "text": {
                         "type": "plain_text",
-                        "text": ":moneybag: MRR",
+                        "text": f":moneybag: MRR: ${d['summary']['currentMrrK']}k",
                         "emoji": True
                     }
                 },
@@ -46,7 +46,30 @@ def push(d):
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": "You're ahead of your goal! MRR is currently is *$25.2k* :tada: \n:arrow_up: 4% ($1.1k) WoW\n:arrow_up: 8% ($2.1k) MTD \n\n<https://trypaper.io|20% of your customers> account for xx% of your MRR"
+                        "text": d['summary']['mrrMsg']
+                    },
+                    "accessory": {
+                        "type": "image",
+                        "image_url": d['url'],
+                        "alt_text": "MRR"
+                    }
+                },
+                {
+                    "type": "divider"
+                },
+                {
+                    "type": "header",
+                    "text": {
+                        "type": "plain_text",
+                        "text": f":smiley: Customers: {d['summary']['currentCustomers']}",
+                        "emoji": True
+                    }
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": d['summary']['customerMsg']
                     },
                     "accessory": {
                         "type": "image",
@@ -64,7 +87,7 @@ def push(d):
                             "type": "button",
                             "text": {
                                 "type": "plain_text",
-                                "text": "Open Paper",
+                                "text": "Open Pulse",
                                 "emoji": True
                             },
                             "value": "open_paper",

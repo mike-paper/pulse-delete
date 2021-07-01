@@ -35,7 +35,7 @@
               </div>
             </dd>
           </div>
-          <div class="px-4 py-5 sm:p-6">
+          <div class="px-4 py-5 sm:p-6 hover:shadow-lg">
             <dt class="text-base font-normal text-gray-900">
               Customers
             </dt>
@@ -55,7 +55,7 @@
               </div>
             </dd>
           </div>
-          <div class="px-4 py-5 sm:p-6">
+          <div class="px-4 py-5 sm:p-6 hover:shadow-lg">
             <dt class="text-base font-normal text-gray-900">
               Churn
             </dt>

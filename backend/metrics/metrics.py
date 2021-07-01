@@ -2,6 +2,7 @@ import json
 import uuid
 import altair
 import altair_saver
+import datetime
 
 from selenium import webdriver
 chrome_options = webdriver.ChromeOptions()
@@ -44,7 +45,7 @@ vegaSpec = {
     },
     "encoding": {
         "x": {
-            "field": "date_actual", 
+            "field": "mrr_month_dt", 
             "timeUnit": "yearmonth", 
             "type": "temporal",
             "title": None,
@@ -99,3 +100,47 @@ def getChart(d):
     filename = f'./static/{chartId}.png'
     altair_saver.save(chart, filename, method='selenium', webdriver=driver)
     return {'ok': True, 'chartId': chartId, 'filename': filename}
+
+def getSummary(last3):
+    summary = {}
+    dt = datetime.datetime.utcnow()
+    curr = last3[2]
+    prev = last3[1]
+    summary['growthGoal'] = .2
+    summary['prcntThruMonth'] = dt.day / 30
+    summary['growthGoalNow'] = summary['growthGoal'] * summary['prcntThruMonth']
+    
+    # mrr
+    summary['currentMrr'] = curr['mrr']
+    summary['previousMrr'] = prev['mrr']
+    summary['mrrGrowth'] = summary['currentMrr'] - summary['previousMrr']
+    summary['mrrGrowthPrcnt'] = summary['mrrGrowth'] / summary['previousMrr']
+    summary['mrrArrow'] = 'arrow_up'
+    if summary['mrrGrowth'] < 0:
+        summary['mrrArrow'] = 'arrow_down'
+    summary['growthGoalProgress'] = "You're ahead of your goal!"
+    if summary['mrrGrowthPrcnt'] < summary['growthGoalNow']:
+        summary['growthGoalProgress'] = "You're behind your goal, but lets catch up!"
+    summary['currentMrrK'] = round(summary['currentMrr'] / 1000, 1)
+    summary['mrrGrowthK'] = round(summary['mrrGrowth'] / 1000, 1)
+    summary['mrrGrowthPrcntRounded'] = round(summary['mrrGrowthPrcnt'] * 100, 1)
+
+    summary['mrrMsg'] = f"{summary['growthGoalProgress']} MRR is currently " 
+    summary['mrrMsg'] += f"*${summary['currentMrrK']}k* :tada: \n:{summary['mrrArrow']}: "
+    summary['mrrMsg'] += f"{summary['mrrGrowthPrcntRounded']}% (${summary['mrrGrowthK']}k) MTD."
+
+    # customers
+    summary['currentCustomers'] = curr['active']
+    summary['previousCustomers'] = prev['active']
+    summary['customerGrowth'] = summary['currentCustomers'] - summary['previousCustomers']
+    summary['customerGrowthPrcnt'] = summary['customerGrowth'] / summary['previousCustomers']
+    summary['customersArrow'] = 'arrow_up'
+    if summary['customerGrowth'] < 0:
+        summary['customersArrow'] = 'arrow_down'
+    summary['customerGrowthPrcntRounded'] = round(summary['customerGrowthPrcnt'] * 100, 1)
+    # \n\n<https://trypaper.io|20% of your customers> account for xx% of your MRR"
+
+    summary['customerMsg'] = f"You current have {summary['currentCustomers']} customers :tada: \n" 
+    summary['customerMsg'] += f":{summary['customersArrow']}: "
+    summary['customerMsg'] += f"{summary['customerGrowthPrcntRounded']}% ({summary['customerGrowth']}) MTD."
+    return summary

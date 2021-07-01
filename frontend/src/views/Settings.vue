@@ -4,11 +4,11 @@
       Spinning...
     </div>
     <div v-else>
-      <div class="pt-8 pl-8">
+      <div class="pt-8 pl-8 mr-8">
         <div class="text-3xl font-extrabold text-gray-900">
           Settings
         </div>
-        <div class="pt-8">
+        <div v-if="storeState.user.hasStripe" class="pt-8">
           <div class="font-medium leading-6 text-gray-900 text-lg">
             Notifications
           </div>
@@ -106,14 +106,25 @@
             Stripe
           </div>
           <p class="max-w-2xl text-sm text-gray-500">
-            Import your Stripe data
+            Import your Stripe data by 
+              <a 
+                href="https://dashboard.stripe.com/apikeys/create"
+                class="font-medium text-indigo-600 hover:text-indigo-500"
+                target="_blank"
+              >
+                creating a key here.
+              </a>
+            Give the key a name and the "Read" permission for "All core resources" and "All Billing resources".
           </p>
-          <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+          <div 
+            class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4"
+          >
             <div class="col-span-6 sm:col-span-2">
               <label for="stripe_api_key" class="block text-sm font-medium text-gray-700">API Key</label>
               <input 
                 type="password" 
                 v-model="stripeApiKey"
+                ref="stripe_api_key" 
                 name="stripe_api_key" 
                 id="stripe_api_key" 
                 autocomplete="password" 
@@ -123,20 +134,149 @@
             <div class="col-span-6 sm:col-span-2">
               <button 
                 @click="updateStripeApiKey"
+                :disabled="updatingStripeKey"
                 class="py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 shadow-sm hover:bg-indigo-500 focus:outline-none focus:shadow-outline-blue focus:bg-indigo-500 active:bg-indigo-600 transition duration-150 ease-in-out"
+                :class="{
+                  'opacity-50': updatingStripeKey, 
+                  'cursor-not-allowed': updatingStripeKey
+                  }"
               >
                 Update API Key
               </button>
+              <div v-if="!storeState.user.hasStripe" class="pt-8">
+                <img src="/stripeApiKeyCreation.png" alt="">
+              </div>
             </div>
           </div>
+          
         </div>
-        <div class="pt-8">
+        <div v-if="storeState.user.hasStripe" class="pt-8">
           <div class="font-medium leading-6 text-gray-900 text-lg">
-            Data model
+            Data
           </div>
           <p class="max-w-2xl text-sm text-gray-500">
-            Manually trigger your data model to update (this may take a few minutes)
+            View and edit your data model and syncing schedule
           </p>
+          <div class="pt-8">
+            <div class="font-medium leading-6 text-gray-900">
+              Raw objects
+            </div>
+            <div class="mt-4 shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Rows
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr
+                    v-for="(job, jobId, jobIndex) in storeState.jobStatuses"
+                    :key="jobIndex"
+                  >
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <div class="ml-0">
+                          <div class="text-sm font-medium text-gray-900">
+                            {{ job.obj }}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span v-if="job.status === 'running'" class="px-2 -ml-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                        {{ job.status }}
+                      </span>
+                      <span v-else class="px-2 -ml-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                        {{ job.status }}
+                      </span>
+                      <div v-if="job.status === 'running'" class="whitespace-nowrap text-sm text-gray-500">
+                        ...
+                      </div>
+                      <div v-else class="whitespace-nowrap text-sm text-gray-500">
+                        Updated {{ job.rows }} rows 
+                        <span v-if="job.updated_on">
+                          {{ timeSince(job.updated_on*1000) }} ago
+                        </span>
+                        
+                      </div>
+                      
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {{ job.count }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="pt-8">
+            <div class="font-medium leading-6 text-gray-900">
+              Modeled Data (dbt)
+            </div>
+            <div class="mt-4 shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Rows
+                    </th>
+                    <th scope="col" class="relative px-6 py-3">
+                      <span class="sr-only">Edit</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr
+                    v-for="(table, tableIndex) in storeState.dbt.models"
+                    :key="tableIndex"
+                  >
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <div class="ml-0">
+                          <div class="text-sm font-medium text-gray-900">
+                            {{ table.name }}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span v-if="runningDbt" class="px-2 -ml-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                        running
+                      </span>
+                      <span v-else class="px-2 -ml-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                        complete
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {{ table.count }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <a 
+                        @click="viewTable(table)" 
+                        class="text-indigo-600 hover:text-indigo-900 cursor-pointer"
+                      >
+                        View
+                      </a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
           <div class="pt-8">
             <button 
               @click="runDbt"
@@ -147,14 +287,33 @@
                 'cursor-not-allowed': runningDbt
                 }"
             >
-              Refresh Data
+              Run dbt
             </button>
+          </div>
+        </div>
+        <div class="pt-8">
+          <div class="font-medium leading-6 text-gray-900 text-lg">
+            Slack
+          </div>
+          <p class="max-w-2xl text-sm text-gray-500">
+            Get your SaaS metrics in Slack
+          </p>
+          <div 
+            class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4"
+          >
+            <div class="col-span-6 sm:col-span-2">
+              <a :href="slackAuthUrl" target="_blank">
+                <img alt="Add to Slack" height="40" width="139" 
+                  src="https://platform.slack-edge.com/img/add_to_slack.png" 
+                  srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" />
+                </a>
+            </div>
           </div>
         </div>
         
       </div>
       <div class="pt-16">
-        storeState.settings: {{storeState.settings}}
+        <!-- jobStatuses: {{storeState.jobStatuses}} -->
       </div>
     </div>
   </div>
@@ -270,15 +429,20 @@ export default {
     // window.vegaEmbed('#view', yourVlSpec);
   },
   mounted() {
-    this.getDbt()
+    this.focusStripe()
     // this.startTyped()
   },
   data() {
       return {
         store: store,
         storeState: store.state,
+        slackAuthUrl: 'https://slack.com/oauth/v2/authorize' + 
+          '?client_id=2068350445268.2075584116417&scope=channels:read' + 
+          ',chat:write.public,chat:write,files:write&user_scope=',
+        dbtLogs: [],
         stripeApiKey: '',
         runningDbt: false,
+        updatingStripeKey: false,
         analysisChanged: false,
         searchTerm: '',
         searching: true,
@@ -380,6 +544,21 @@ export default {
         },
       }
   },
+  computed: {
+    // dbtColumns() {
+    //   let allCols = []
+    //   for (let index = 0; index < this.storeState.dbt.models.length; index++) {
+    //     const cols = this.storeState.dbt.models[index].columns;
+    //     for (let i2 = 0; i2 < cols.length; i2++) {
+    //       const col = cols[i2];
+    //       col.modelName = this.storeState.dbt.models[index].name
+    //       col.label = this.getLabel(col)
+    //       allCols.push(col)
+    //     }
+    //   }
+    //   return allCols
+    // }
+  },
   methods: {
     login() {
       this.$router.push({ name: 'Login', query: { goto: 'Landing' }})
@@ -387,7 +566,98 @@ export default {
     logout() {
       this.$router.push({ name: 'Logout', query: { goto: 'Landing' }})
     },
+    getLabel(column) {
+      if (column.meta && column.meta.dimension && column.meta.dimension.label) {
+        return column.meta.dimension.label
+      }
+      if (column && column.label) return column.label
+      if (column.name) return column.name
+      return 'no label'
+    },
+    viewTable(table) {
+      this.$router.push({ name: 'Analyze', query: { table: table.name }})
+    },
+    timeSince(date) {
+      var seconds = Math.floor((new Date() - date) / 1000);
+      var interval = seconds / 31536000;
+      if (interval > 1) {
+        return Math.floor(interval) + " years";
+      }
+      interval = seconds / 2592000;
+      if (interval > 1) {
+        return Math.floor(interval) + " months";
+      }
+      interval = seconds / 86400;
+      if (interval > 1) {
+        return Math.floor(interval) + " days";
+      }
+      interval = seconds / 3600;
+      if (interval > 1) {
+        return Math.floor(interval) + " hours";
+      }
+      interval = seconds / 60;
+      if (interval > 1) {
+        return Math.floor(interval) + " minutes";
+      }
+      return Math.floor(seconds) + " seconds";
+    },
+    checkJobStatus(jobId) {
+      const path = this.getApiUrl('get_job')
+      let d = {
+        user: this.storeState.user, 
+        jobId: jobId,
+        }
+      axios.post(path, d)
+        .then((res) => {
+          console.log('got get_job: ', res.data)
+          var self = this
+          if (!res.data.ok) {
+            setTimeout(() => self.checkJobStatus(jobId), 500);
+          } else if (res.data.ok && res.data.job.status === 'running') {
+            this.storeState.jobStatuses[jobId] = res.data.job
+            setTimeout(() => self.checkJobStatus(jobId), 1000);
+          } else {
+            this.storeState.jobStatuses[jobId] = res.data.job
+          }
+        })
+        .catch((error) => {
+          console.error(error)
+        })
+    },
+    checkJobStatuses() {
+      this.storeState.jobStatuses = {}
+      for (let index = 0; index < this.jobIds.length; index++) {
+        const jobId = this.jobIds[index];
+        this.checkJobStatus(jobId)
+      }
+    },
+    focusStripe() {
+      if (!this.storeState.user.hasStripe && this.$refs.stripe_api_key) {
+        this.$refs.stripe_api_key.focus()
+      }
+    },
     updateStripeApiKey() {
+      if (this.stripeApiKey.length < 5) {
+        let secondary = `
+          Go to your 
+          <a 
+            href="https://dashboard.stripe.com/apikeys/create"
+            class="font-medium text-indigo-600 hover:text-indigo-500"
+            target="_blank"
+          >
+            dashboard
+          </a>
+          to create a key.
+        `
+        let opts = {
+          primary: 'Invalid Stripe API key',
+          secondary: secondary,
+          type: 'error'
+          }
+        this.showMsg(this, opts)
+        return
+      }
+      this.updatingStripeKey = true
       const path = this.getApiUrl('update_secret')
       let d = {
         user: this.storeState.user, 
@@ -396,9 +666,28 @@ export default {
         }
       axios.post(path, d)
         .then((res) => {
+          this.updatingStripeKey = false
           console.log('got update_secret: ', res.data)
+          if (res.data.ok) {
+            let opts = {
+              primary: 'Stripe API key successfully added!',
+              secondary: 'Starting sync, this will take a few minutes.',
+              }
+            this.showMsg(this, opts)
+            this.storeState.user.hasStripe = true
+            this.jobIds = res.data.jobIds
+            this.checkJobStatuses()
+          } else {
+            let opts = {
+              primary: 'Stripe API key error.',
+              secondary: res.data.error,
+              type: 'error'
+              }
+            this.showMsg(this, opts)
+          }
         })
         .catch((error) => {
+          this.updatingStripeKey = false
           console.error(error)
         })
     },
@@ -411,6 +700,19 @@ export default {
         .then((res) => {
           this.runningDbt = false
           console.log('got run_dbt: ', res.data)
+          if (res.data.ok) {
+            this.dbtLogs = res.data.dbtLogs
+            this.dbtErrors = res.data.dbtErrors
+            for (let index = 0; index < this.dbtLogs.length; index++) {
+              const log = this.dbtLogs[index];
+              let ti = this.storeState.dbt.models.findIndex(m => m.name === log.table)
+              if (ti >= 0) this.storeState.dbt.models[ti].count = log.count
+            }
+            for (let index = 0; index < this.dbtErrors.length; index++) {
+              const log = this.dbtErrors[index];
+              console.error(log.message)
+            }
+          }
         })
         .catch((error) => {
           this.runningDbt = false
@@ -726,14 +1028,6 @@ export default {
       }
       return this.getDimensionLabel(fieldInUpdate)
     },
-    getLabel(column) {
-      if (column.meta && column.meta.dimension && column.meta.dimension.label) {
-        return column.meta.dimension.label
-      } else if (column.meta && column.meta.measure && column.meta.measure.label) {
-        return column.meta.measure.label
-      }
-      return false
-    },
     getDimensionLabel(column) {
       if (column.meta && column.meta.dimension && column.meta.dimension.label) {
         return column.meta.dimension.label
@@ -776,116 +1070,12 @@ export default {
       this.running = false
       this.searching = false
     },
-    getAllSelected() {
-      let selected = []
-      for (let index = 0; index < this.storeState.dbt.models.length; index++) {
-        const model = this.storeState.dbt.models[index]
-        if (!model.columns) continue
-        for (let index2 = 0; index2 < model.columns.length; index2++) {
-          const col = model.columns[index2]
-          var measures = col && col.meta && col.meta.measures
-          if (measures) {
-            for (const [key, measure] of Object.entries(measures)) {
-              if (measure.selected) {
-                measure.dimOrMeas = 'measure'
-                selected.push(measure)
-              }
-            }
-          }
-          var dimension = col && col.meta && col.meta.dimension
-          if (dimension && dimension.selected) {
-            dimension.dimOrMeas = 'dimension'
-            selected.push(dimension)
-          }
-        }
-      }
-      return selected
-    },
     showMsg(self, opts) {
       self.storeState.msg.show = true
       self.storeState.msg.primary = opts.primary
       self.storeState.msg.secondary = opts.secondary
       self.storeState.msg.type = opts.type
       setTimeout(() => self.storeState.msg.show = false, self.storeState.msg.time);
-    },
-    runAnalysis() {
-      console.log('runAnalysis...')
-      let selected = this.getAllSelected()
-      this.analysisChanged = false
-      if (selected.length === 0) {
-        this.searching = true
-        let opts = {
-          primary: 'Error running analysis',
-          secondary: 'You need to select at least one dimension or measure.',
-          type: 'error'
-          }
-        this.showMsg(this, opts)
-        return
-      }
-      const path = this.getApiUrl('run_analysis')
-      let d = {user: this.storeState.user, dbt: this.storeState.dbt}
-      this.running = true
-      this.searching = false
-      axios.post(path, d)
-        .then((res) => {
-          this.running = false
-          if (!res.data.ok) {
-            console.error(res)
-            let opts = {
-              primary: 'Error running analysis',
-              secondary: res.data.error,
-              }
-            this.showMsg(this, opts)
-            return
-          }
-          console.log('runAnalysis: ', res.data)
-          
-          this.storeState.analysis.results = res.data
-          this.createGrid(res.data)
-          if (!this.storeState.analysis.viz.encoding.x.field) {
-            for (let index = 0; index < res.data.sql.selected.length; index++) {
-              const selected = res.data.sql.selected[index];
-              if (selected.dimOrMeas === 'dimension') {
-                this.storeState.analysis.viz.encoding.x.field = selected.alias
-                break
-              }
-            } 
-          }
-          if (!this.storeState.analysis.viz.encoding.y.field) {
-            for (let index = 0; index < res.data.sql.selected.length; index++) {
-              const selected = res.data.sql.selected[index];
-              if (selected.dimOrMeas === 'measure') {
-                this.storeState.analysis.viz.encoding.y.field = selected.alias
-                break
-              }
-            } 
-          }
-          this.createViz({})
-          // this.getAllSelected()
-          // this.metricData = reactive(res.data)
-          // this.createCharts()
-          // this.createCustomerTable()
-        })
-        .catch((error) => {
-          this.running = false
-          console.error(error)
-        })
-    },
-    getMetrics() {
-      this.gotMetrics = false
-      const path = this.getApiUrl('get_metrics')
-      let d = {user: this.storeState.user, userData: this.storeState.userData}
-      axios.post(path, d)
-        .then((res) => {
-          console.log('got get_metrics: ', res.data)
-          this.gotMetrics = true
-          this.metricData = reactive(res.data)
-          // this.createCharts()
-          // this.createCustomerTable()
-        })
-        .catch((error) => {
-          console.error(error)
-        })
     },
     deepCopy(c) {
       return JSON.parse(JSON.stringify(c))
@@ -955,32 +1145,6 @@ export default {
     },
   },
   watch: {
-    'tableFilters': {
-        handler: function () {
-          this.createCustomerTable()
-        },
-        deep: true
-    },
-    'fieldInUpdate': {
-      handler: function () {
-        if (this.fieldInUpdate.axis && this.fieldInUpdate.axis.value != 'none') {
-          let axis = this.fieldInUpdate.axis.value
-          let label = this.getFieldLabel(this.fieldInUpdate)
-          this.storeState.analysis.viz.encoding[axis].field = label
-          this.createViz({})
-        }
-        
-      },
-      deep: true
-    },
-    'storeState.dbt.models': {
-      handler: function () {
-        let selected = this.getAllSelected()
-        if (selected.length > 0) this.analysisChanged = true
-        
-      },
-      deep: true
-    }
   },
 }
 /* eslint-disable no-unused-vars */
@@ -988,20 +1152,3 @@ export default {
 /* eslint-disable vue/no-unused-components */
 
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style>
-  .gridjs-tbody {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-    line-height: 1.5;
-    --border-opacity: 1;
-    border-collapse: collapse;
-    box-sizing: border-box;
-    border-width: 1px !important;
-    border-style: solid;
-    --bg-opacity: 1;
-    background-color: rgba(255, 255, 255, var(--bg-opacity));
-    --divide-opacity: 1;
-    border-color: rgba(237, 242, 247, var(--divide-opacity));
-  }
-</style>

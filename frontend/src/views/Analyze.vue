@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="!gotDbt">
+    <div v-if="!storeState.gotDbt">
       <div class="flex justify-center space-y-8 w-full pt-32">
         <svg class="animate-spin -ml-1 mr-3 h-20 w-20 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -173,7 +173,6 @@
                 <span @click="updateDimensionNow(index, index2, column)" class="mr-3 mb-2 inline-flex rounded cursor-pointer items-center py-1 pl-3 pr-1 text-sm font-medium bg-indigo-100 text-indigo-700">
                   {{model.name}}.{{getDimensionLabel(column)}}
                   <button @click="removeColumn(index, index2, column, 'dimension')" type="button" class="flex-shrink-0 ml-1 h-4 w-4 rounded-full inline-flex items-center justify-center text-indigo-400 hover:bg-indigo-200 hover:text-indigo-500 focus:outline-none focus:bg-indigo-500 focus:text-white">
-                    <span class="sr-only">Remove large option</span>
                     <svg class="h-2 w-2" stroke="currentColor" fill="none" viewBox="0 0 8 8">
                       <path stroke-linecap="round" stroke-width="1.5" d="M1 1l6 6m0-6L1 7" />
                     </svg>
@@ -210,6 +209,12 @@
           </span>
         </div>
         <div class="col-span-3 pt-4 flex justify-end mr-2">
+          <ViewGridIcon 
+            class="h-6 w-6 hover:bg-gray-200 rounded cursor-pointer ml-3 text-gray-500"
+            :class="{'text-gray-900': storeState.analysis.viz.type === 'grid'}"
+            aria-hidden="true" 
+            @click="flipVizType('grid')"
+          />
           <PresentationChartLineIcon 
             class="h-6 w-6 hover:bg-gray-200 rounded cursor-pointer ml-3 text-gray-500"
             :class="{'text-gray-900': storeState.analysis.viz.type === 'line'}"
@@ -319,13 +324,14 @@
     </div>
     <div 
       class="px-4 py-4 w-full"
-      v-if="true"
+      :class="{'hidden': storeState.analysis.viz.type === 'grid'}"
     >
       <div class="w-full" id="viz">
       </div>
     </div>
     <div 
       class="px-4 py-4"
+      :class="{'hidden': storeState.analysis.viz.type != 'grid'}"
     >
       <div>
         <div id="gridInner">
@@ -338,42 +344,6 @@
     </div>
     <div>
       <!-- {{storeState.analysis.results}} -->
-    </div>
-    <!-- ALERTS / NOTIFICATION -->
-    <div>
-      <div aria-live="assertive" class="fixed inset-0 flex items-end px-4 py-6 pointer-events-none sm:p-6 sm:items-start">
-        <div class="w-full flex flex-col items-center space-y-4 sm:items-end">
-          <!-- Notification panel, dynamically insert this into the live region when it needs to be displayed -->
-          <transition enter-active-class="transform ease-out duration-300 transition" enter-from-class="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2" enter-to-class="translate-y-0 opacity-100 sm:translate-x-0" leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-            <div v-if="storeState.msg.show" class="max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden">
-              <div class="p-4">
-                <div class="flex items-start">
-                  <div v-if="storeState.msg.type === 'error'" class="flex-shrink-0">
-                    <ExclamationCircleIcon class="h-6 w-6 text-red-400" aria-hidden="true" />
-                  </div>
-                  <div v-else class="flex-shrink-0">
-                    <CheckCircleIcon class="h-6 w-6 text-green-400" aria-hidden="true" />
-                  </div>
-                  <div class="ml-3 w-0 flex-1 pt-0.5">
-                    <p class="text-sm font-medium text-gray-900">
-                      {{storeState.msg.primary}}
-                    </p>
-                    <p class="mt-1 text-sm text-gray-500">
-                      {{storeState.msg.secondary}}
-                    </p>
-                  </div>
-                  <div class="ml-4 flex-shrink-0 flex">
-                    <button @click="storeState.msg.show = false" class="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                      <span class="sr-only">Close</span>
-                      <XIcon class="h-5 w-5" aria-hidden="true" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </transition>
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -476,19 +446,21 @@ export default {
       },
       fixedHeader: true,
       height: '400px',
+      width: 'unset',
       // columns: ["Name", "Email", "Phone Number"],
       data: [],
       className: {
         td: 'px-6 py-4 whitespace-nowrap text-sm text-gray-900 divide-y divide-gray-200',
         th: 'px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 tracking-wider',
-        table: 'min-w-full divide-gray-200',
+        table: 'min-w-full divide-gray-200 w-auto',
         tbody: 'bg-white '
       }
     })
     // window.vegaEmbed('#view', yourVlSpec);
   },
   mounted() {
-    this.getDbt()
+    this.checkUrl()
+    // this.getDbt()
     // this.startTyped()
   },
   data() {
@@ -501,7 +473,6 @@ export default {
         running: false,
         updatingField: false,
         gotMetrics: false,
-        gotDbt: false,
         fieldInUpdate: {},
         tableFilters: {
           active: false,
@@ -555,6 +526,7 @@ export default {
           "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
           "description": "MRR by Month",
           "width": "container",
+          // "width": "500",
           "mark": {
             "type": "line", 
             "tooltip": false, 
@@ -603,6 +575,21 @@ export default {
     logout() {
       this.$router.push({ name: 'Logout', query: { goto: 'Landing' }})
     },
+    checkUrl() {
+      if (this.$route.query.table) {
+        console.log('checkUrl', this.$route.query.table, this.storeState.dbt.models)
+        if (this.storeState.dbt.models) {
+          this.deselectAll()
+          let table = this.storeState.dbt.models.findIndex(m => m.name === this.$route.query.table)
+          if (table >= 0) {
+            for (let index = 0; index < this.storeState.dbt.models[table].columns.length; index++) {
+              this.storeState.dbt.models[table].columns[index].meta.dimension.selected = true 
+            }
+            this.runAnalysis()
+          }
+        }
+      }
+    },
     updateDimensionNow(index, index2, column) {
       this.updatingField = true
       this.fieldInUpdate = column
@@ -644,7 +631,11 @@ export default {
       this.createViz({})
     },
     createViz(opts) {
-      console.log('createViz...')
+      console.log('createViz...', this.storeState.analysis.viz.type)
+      if (this.storeState.analysis.viz.type === 'grid') {
+        this.createGrid(false)
+        return
+      }
       this.searching = false
       this.updatingField = false
       this.searchTerm = ''
@@ -743,6 +734,7 @@ export default {
       }).render(document.getElementById("testtable"));
     },
     createGrid(data) {
+      if (!data) data = this.storeState.analysis.results
       console.log('createGrid...')
   //     columns: [
   //     { 
@@ -765,8 +757,10 @@ export default {
       })
       if (window.analyzeGrid.config.container) {
         window.analyzeGrid.forceRender()
-      } else {
+      } else if (document.getElementById("gridInner")) {
         window.analyzeGrid.render(document.getElementById("gridInner"));
+      } else {
+        console.error('no container for grid...')
       }
       // document.getElementById("customerTable").innerHTML = ''
     },
@@ -777,60 +771,6 @@ export default {
     getAppUrl(endpoint) {
       if (process.env.NODE_ENV != 'production') return `http://localhost:8080/${endpoint}`
       return `https://trypaper.io/${endpoint}`
-    },
-    updateSavedFunders() {
-      this.storeState.userData.savedFunders = []
-      for (let index = 0; index < this.filteredFunders.length; index++) {
-        const row = this.filteredFunders[index];
-        if (row.saved) this.storeState.userData.savedFunders.push(row.public_id)
-      }
-      this.updateUserData()
-    },
-    updateSavedOnFunders() {
-      for (let index = 0; index < this.funderData.length; index++) {
-        const f = this.funderData[index]
-        if (this.storeState.userData.savedFunders.includes(f.public_id)) f.saved = true
-      }
-    },
-    saveFunder(row) {
-      row.saved = true
-      if (!this.storeState.isLoggedIn || !this.storeState.user.publicAddress) {
-        this.$router.push({ name: 'Login', query: { goto: 'Landing' }})
-      }
-    },
-    updateUserData() {
-      if (!this.storeState.isLoggedIn || !this.storeState.gotUserData) return
-      const path = this.getApiUrl('update_user_data')
-      let d = {user: this.storeState.user, userData: this.storeState.userData}
-      axios.post(path, d)
-        .then((res) => {
-          console.log('got update_user_data: ', res.data)
-        })
-        .catch((error) => {
-          console.error(error)
-        })
-    },
-    removeFunder(row) {
-      row.saved = false
-      // this.storeState.userData.savedFunders.pop(row.domain)
-      if (!this.storeState.isLoggedIn || !this.storeState.user.publicAddress) {
-        this.$router.push({ name: 'Login', query: { goto: 'Landing' }})
-      } else {
-        // save funder to users db
-        this.updateUserData()
-      }
-    },
-    applyNow() {
-      this.$router.push({ name: 'Apply'})
-    },
-    moreInfo(row) {
-      // this.saveFunder(row)
-      if (!this.storeState.isLoggedIn || !this.storeState.user.publicAddress) {
-        this.$router.push({ name: 'Login', query: { goto: 'Landing' }})
-      } else {
-        let url = `http://${row.domain}/?ref=trypaperio`
-        window.open(url, '_blank');
-      }
     },
     searchMatch(model, column) {
       if (this.searchTerm.length === 0) return true
@@ -941,23 +881,6 @@ export default {
       }
       return column.name
     },
-    getDbt() {
-      this.gotDbt = false
-      const path = this.getApiUrl('get_dbt')
-      let d = {user: this.storeState.user, userData: this.storeState.userData}
-      axios.post(path, d)
-        .then((res) => {
-          console.log('got get_dbt: ', res.data)
-          this.gotDbt = true
-          this.storeState.dbt = res.data.data
-          // this.metricData = reactive(res.data)
-          // this.createCharts()
-          // this.createCustomerTable()
-        })
-        .catch((error) => {
-          console.error(error)
-        })
-    },
     cancelRun() {
       this.running = false
       this.searching = false
@@ -986,6 +909,25 @@ export default {
         }
       }
       return selected
+    },
+    deselectAll() {
+      for (let index = 0; index < this.storeState.dbt.models.length; index++) {
+        const model = this.storeState.dbt.models[index]
+        if (!model.columns) continue
+        for (let index2 = 0; index2 < model.columns.length; index2++) {
+          const col = model.columns[index2]
+          var measures = col && col.meta && col.meta.measures
+          if (measures) {
+            for (const [key, measure] of Object.entries(measures)) {
+              if (measure.selected) measure.selected = false
+            }
+          }
+          var dimension = col && col.meta && col.meta.dimension
+          if (dimension && dimension.selected) {
+            dimension.selected = false
+          }
+        }
+      }
     },
     showMsg(self, opts) {
       self.storeState.msg.show = true
@@ -1020,6 +962,7 @@ export default {
             let opts = {
               primary: 'Error running analysis',
               secondary: res.data.error,
+              type: 'error'
               }
             this.showMsg(this, opts)
             return
@@ -1046,7 +989,7 @@ export default {
               }
             } 
           }
-          this.createViz({})
+          if (this.storeState.analysis.results.rows.length <= 100) this.createViz({})
           // this.getAllSelected()
           // this.metricData = reactive(res.data)
           // this.createCharts()

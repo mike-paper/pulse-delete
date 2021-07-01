@@ -32,6 +32,11 @@ const routes = [
     component: Settings
   },
   {
+    path: '/team',
+    name: 'Team',
+    component: Settings
+  },
+  {
     path: '/login',
     name: 'Login',
     component: Login

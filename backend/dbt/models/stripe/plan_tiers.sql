@@ -1,11 +1,9 @@
 with plans as (
 	select 
-	details ->> 'id' as plan_id,
-	jsonb_array_elements(details -> 'tiers') as tiers
-	from public.stripe_plans 
-	where details ->> 'tiers' is not null
-	and team_id = {{ env_var('PAPER_DBT_TEAM_ID') }} 
-	limit 100
+	plan_id,
+	jsonb_array_elements(tiers) as tiers
+	from {{ref('plans')}} as p
+	where p.tiers != 'null'
 ), plans2 as (
 	select 
 	(tiers ->> 'up_to')::int as up_to,

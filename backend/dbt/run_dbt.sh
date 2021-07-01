@@ -1,7 +1,5 @@
 #!/bin/bash
-# export PAPER_DBT_SCHEMA=some_test_2
-echo $PAPER_DBT_SCHEMA
-echo $PWD
+# echo $PAPER_DBT_SCHEMA
 cd dbt
-echo $PWD
-dbt run --profiles-dir .
+# dbt --log-format json run --profiles-dir . --model plans
+dbt --log-format json run --profiles-dir . 

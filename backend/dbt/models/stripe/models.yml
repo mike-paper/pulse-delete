@@ -1,6 +1,36 @@
 version: 2
 
 models:
+  - name: plans
+    description: > 
+      Plans https://stripe.com/docs/api/plans
+    docs:
+      show: true
+    columns:
+      - name: plan_id
+        description: Plan ID
+        meta:
+          dimension:
+            label: Plan ID
+          measures:
+            plans:
+              label: Plans
+              type: count
+      - name: name
+        description: Name
+        meta:
+          dimension:
+            label: Name
+          measures:
+            customers:
+              label: Customers
+              type: count
+      - name: created_on
+        description: Plan created on
+        meta:
+          dimension:
+            label: Created On
+            timeframes: [week, month, year]
   - name: customers
     description: > 
       Customers https://stripe.com/docs/api/customers

@@ -6,6 +6,7 @@ export const store = {
       isLoggedIn: false,
       checkedLogin: false,
       gotUserData: false,
+      gotDbt: false,
       hideSidebar: false,
       user: {
         oauth: false
@@ -23,6 +24,7 @@ export const store = {
         }
       },
       dbt: {},
+      jobStatuses: {},
       analysis: {
         uuid: false,
         results: {
@@ -30,7 +32,7 @@ export const store = {
           cols: [],
         },
         viz: {
-          type: 'line',
+          type: 'grid',
           encoding: {
             "x": {"field": false, "type": "ordinal"},
             "y": {"field": false, "type": "quantitative"},

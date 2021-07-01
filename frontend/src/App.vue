@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <div class="h-screen flex bg-gray-50 overflow-scroll">
+    <div class="h-screen flex bg-gray-50 overflow-y-scroll">
       <TransitionRoot as="template" :show="mobileMenuOpen">
         <Dialog as="div" static class="fixed inset-0 flex z-40 md:hidden" @close="mobileMenuOpen = false" :open="mobileMenuOpen">
           <TransitionChild as="template" enter="transition-opacity ease-linear duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="transition-opacity ease-linear duration-300" leave-from="opacity-100" leave-to="opacity-0">
@@ -162,7 +162,7 @@
         </div>
       </div>
 
-      <div class="flex-1 min-w-0 flex flex-col overflow-scroll">
+      <div class="flex-1 min-w-0 flex flex-col overflow-y-scroll">
         <!-- Mobile top navigation -->
         <div class="md:hidden">
           <div class="bg-gray-900 py-2 px-4 flex items-center justify-between sm:px-6 md:px-8">
@@ -178,13 +178,13 @@
           </div>
         </div>
 
-        <main class="flex-1 flex overflow-scroll">
-          <div class="flex-1 flex xl:overflow-scroll">
+        <main class="flex-1 flex overflow-y-scroll">
+          <div class="flex-1 flex xl:overflow-y-scroll">
             <!-- Primary column -->
             <section 
               v-if="storeState.checkedLogin"
               aria-labelledby="primary-heading" 
-              class="min-w-0 flex-1 h-full flex flex-col overflow-scroll md:order-last"
+              class="min-w-0 flex-1 h-full flex flex-col overflow-y-scroll md:order-last"
             >
               <!-- <h1 id="primary-heading" class="sr-only">Account</h1> -->
               <router-view/>
@@ -192,7 +192,7 @@
             <section 
               v-else
               aria-labelledby="primary-heading" 
-              class="min-w-0 flex-1 h-full flex flex-col overflow-scroll md:order-last"
+              class="min-w-0 flex-1 h-full flex flex-col overflow-y-scroll md:order-last"
             >
               <div class="flex justify-center space-y-8 w-full pt-32">
                 <svg class="animate-spin -ml-1 mr-3 h-20 w-20 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -212,7 +212,41 @@
         </main>
       </div>
     </div>
-    
+    <!-- ALERTS / NOTIFICATION -->
+    <div>
+      <div aria-live="assertive" class="fixed inset-0 flex items-end px-4 py-6 pointer-events-none sm:p-6 sm:items-start">
+        <div class="w-full flex flex-col items-center space-y-4 sm:items-end">
+          <!-- Notification panel, dynamically insert this into the live region when it needs to be displayed -->
+          <transition enter-active-class="transform ease-out duration-300 transition" enter-from-class="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2" enter-to-class="translate-y-0 opacity-100 sm:translate-x-0" leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+            <div v-if="storeState.msg.show" class="max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden">
+              <div class="p-4">
+                <div class="flex items-start">
+                  <div v-if="storeState.msg.type === 'error'" class="flex-shrink-0">
+                    <ExclamationCircleIcon class="h-6 w-6 text-red-400" aria-hidden="true" />
+                  </div>
+                  <div v-else class="flex-shrink-0">
+                    <CheckCircleIcon class="h-6 w-6 text-green-400" aria-hidden="true" />
+                  </div>
+                  <div class="ml-3 w-0 flex-1 pt-0.5">
+                    <p class="text-sm font-medium text-gray-900">
+                      {{storeState.msg.primary}}
+                    </p>
+                    <p v-html="storeState.msg.secondary" class="mt-1 text-sm text-gray-500">
+                    </p>
+                  </div>
+                  <div class="ml-4 flex-shrink-0 flex">
+                    <button @click="storeState.msg.show = false" class="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                      <span class="sr-only">Close</span>
+                      <XIcon class="h-5 w-5" aria-hidden="true" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </transition>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -232,6 +266,8 @@ import {
   MenuItems,
   } from '@headlessui/vue'
 import { 
+  CheckCircleIcon,
+  ExclamationCircleIcon,
   BookmarkAltIcon, 
   FireIcon, 
   HomeIcon, 
@@ -253,6 +289,8 @@ export default {
       msg: String
   },
   components: {
+    CheckCircleIcon,
+    ExclamationCircleIcon,
     Dialog,
     DialogOverlay,
     TransitionChild,
@@ -293,6 +331,39 @@ export default {
     async handleLogout() {
       this.$router.push({ name: 'Logout'})
     },
+    getRecentJobs() {
+      this.storeState.gotDbt = false
+      const path = this.getApiUrl('get_recent_jobs')
+      let d = {user: this.storeState.user, userData: this.storeState.userData}
+      axios.post(path, d)
+        .then((res) => {
+          console.log('got get_recent_jobs: ', res.data)
+          this.storeState.jobStatuses = res.data.jobs
+          // this.metricData = reactive(res.data)
+          // this.createCharts()
+          // this.createCustomerTable()
+        })
+        .catch((error) => {
+          console.error(error)
+        })
+    },
+    getDbt() {
+      this.storeState.gotDbt = false
+      const path = this.getApiUrl('get_dbt')
+      let d = {user: this.storeState.user, userData: this.storeState.userData}
+      axios.post(path, d)
+        .then((res) => {
+          console.log('got get_dbt: ', res.data)
+          this.storeState.gotDbt = true
+          this.storeState.dbt = res.data.data
+          // this.metricData = reactive(res.data)
+          // this.createCharts()
+          // this.createCustomerTable()
+        })
+        .catch((error) => {
+          console.error(error)
+        })
+    },
     getPic() {
       if (this.storeState.user.oauth) {
         try {
@@ -322,14 +393,16 @@ export default {
       axios.post(path, d)
         .then((res) => {
           console.log('got getUserData: ', res.data)
-          if (res.data.userData) {
-            this.storeState.userData = res.data.userData
-          }
           if (res.data.user) {
             this.storeState.user = res.data.user
+            if (!res.data.user.hasStripe) {
+              console.log('user doesnt have stripe...')
+              this.$router.push({ name: 'Settings'})
+            } 
           }
           this.storeState.gotUserData = true
           this.emitter.emit('user-data');
+          
         })
         .catch((error) => {
           console.error(error)
@@ -345,6 +418,8 @@ export default {
       if (this.storeState.isLoggedIn) {
         this.storeState.user = await magic.user.getMetadata();
         this.getUserData()
+        this.getDbt()
+        this.getRecentJobs()
       } else {
         this.storeState.gotUserData = true
         this.$router.push({ name: 'Login'})

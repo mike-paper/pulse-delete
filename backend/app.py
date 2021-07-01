@@ -84,7 +84,7 @@ db = SQLAlchemy(app)
 
 # testStripe = pints.stripe.getObject(db.engine, 1, 'coupons')
 # testStripe = pints.stripe.getObject(db.engine, 1, 'invoices')
-testStripe = pints.stripe.getAll(db.engine, 3)
+# testStripe = pints.stripe.getAll(db.engine, 4)
 
 def getDbt():
     with open(r'./dbt/models/stripe/models.yml') as file:
@@ -99,8 +99,8 @@ def get_stripe():
     data = flask.request.get_json()
     logger.info(f'get_stripe: {data}')
     user = getUser(data)
-    res = pints.stripe.getAll(db.engine, user['team_id'])
-    return json.dumps({'ok' : True}), 200, {'ContentType':'application/json'}
+    jobIds = pints.stripe.getAll(db.engine, user['team_id'])
+    return json.dumps({'ok' : True, 'jobIds': jobIds}), 200, {'ContentType':'application/json'}
 
 @app.route('/get_dbt', methods=["GET", "POST"])
 def get_dbt():
@@ -110,29 +110,32 @@ def get_dbt():
     d = getDbt()
     return json.dumps({'ok' : True, 'data': d}), 200, {'ContentType':'application/json'}
 
+@app.route('/get_raw_counts', methods=["GET", "POST"])
+def get_raw_counts():
+    data = flask.request.get_json()
+    logger.info(f'get_raw_counts: {data}')
+    user = getUser(data)
+    counts = pints.postgres.getRawTableCounts(db.engine, user['team_id'])
+    return json.dumps({'ok' : True, 'counts': counts}), 200, {'ContentType':'application/json'}
+
 @app.route('/run_dbt', methods=["GET", "POST"])
 def run_dbt():
     data = flask.request.get_json()
     logger.info(f'run_dbt: {data}')
     user = getUser(data)
-    logger.info(f"run_dbt user: {user['team_id']}")
-    # stdout = check_output([r'./dbt/run_dbt.sh']).decode('utf-8')
-    os.environ['PAPER_DBT_SCHEMA'] = f"team_{user['team_id']}"
-    # os.environ['PAPER_DBT_TEAM_ID'] = f"{user['team_id']}"
-    os.environ['PAPER_DBT_TEAM_ID'] = "1"
-    session = subprocess.Popen(['./dbt/run_dbt.sh'], 
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = session.communicate()
-    logger.info(f'run_dbt stdout: {stdout}')
-    if stderr:
-        logger.error(f'run_dbt stderr: {stderr}')
-    return json.dumps({'ok' : True}), 200, {'ContentType':'application/json'}
+    dbtLogs, dbtErrors = pints.modeling.runDbt(user['team_id'])
+    return json.dumps({
+        'ok' : True, 
+        'dbtLogs': dbtLogs, 
+        'dbtErrors': dbtErrors
+        }), 200, {'ContentType':'application/json'}
 
 @app.route('/run_analysis', methods=["GET", "POST"])
 def run_analysis():
     data = flask.request.get_json()
+    user = getUser(data)
     logger.info(f'run_analysis: {data}')
-    sql = pints.yaml2sql.dbt2Sql(data['dbt'], 'dbt_dev_stripe')
+    sql = pints.yaml2sql.dbt2Sql(data['dbt'], f"team_{user['team_id']}_stripe")
     logger.info(f'run_analysis sql: {sql}')
     try:
         df = pd.read_sql(sql['sql'], db.engine)
@@ -169,7 +172,7 @@ def run_analysis():
         }), 200, {'ContentType':'application/json'}
 
 def getUser(data):
-    logger.info(f'getUser: {data}')
+    logger.debug(f'getUser: {data}')
     publicAddress = data['user'].get('publicAddress', False)
     if not publicAddress:
         d = {
@@ -179,7 +182,7 @@ def getUser(data):
         return d
     sql = '''
     SELECT 
-    u.id as user_id, u.email, u.details, tm.id as team_id
+    u.id as user_id, u.email, u.details, tm.team_id as team_id
     FROM 
     public.users as u left join
     public.team_membership as tm on u.id = tm.user_id
@@ -205,15 +208,37 @@ def update_secret():
     logger.info(f"update_secret: {data}")
     if data['type'] == 'stripe':
         user = getUser(data)
-        secrets = pints.postgres.getSecrets(db.engine, user['team_id'])
-        logger.info(f"secrets: {secrets}")
-        e = pints.utils.encrypt(data['stripeApiKey'])
-        secrets['stripeApiKey'] = e
-        pints.postgres.updateSecrets(db.engine, user['team_id'], secrets)
-    d = {
-        'ok': True,
-        }
-    return json.dumps(d), 200, {'ContentType':'application/json'} 
+        keyTest = pints.stripe.testKey(data['stripeApiKey'])
+        if keyTest['ok']:
+            secrets = pints.postgres.getSecrets(db.engine, user['team_id'])
+            secrets['stripeApiKey'] = pints.utils.encrypt(data['stripeApiKey'])
+            pints.postgres.updateSecrets(db.engine, user['team_id'], secrets)
+            jobIds = pints.stripe.getAll(db.engine, user['team_id'])
+            keyTest['jobIds'] = jobIds
+        return json.dumps(keyTest), 200, {'ContentType':'application/json'} 
+
+@app.route('/get_recent_jobs', methods=["GET", "POST"])
+def get_recent_jobs():
+    data = flask.request.get_json()
+    user = getUser(data)
+    jobs = pints.postgres.getRecentJobs(db.engine, user['team_id'])
+    logger.info(f'jobs: {jobs}')
+    for key, job in jobs.items():
+        logger.info(f'job: {job}')
+        job['job']['count'] = pints.postgres.getRawTableCount(db.engine, 
+            user['team_id'], job['job']['obj'])
+        jobs[key] = job['job']
+    return json.dumps({'ok': True, 'jobs': jobs}), 200, {'ContentType':'application/json'}
+
+@app.route('/get_job', methods=["GET", "POST"])
+def get_job():
+    data = flask.request.get_json()
+    job = pints.postgres.getJob(db.engine, data['jobId'])
+    if job['ok'] and job['job']['status'] == 'complete' and job['job']['type'] == 'stripe':
+        user = getUser(data)
+        job['job']['count'] = pints.postgres.getRawTableCount(db.engine, 
+                    user['team_id'], job['job']['obj'])
+    return json.dumps(job), 200, {'ContentType':'application/json'}
 
 @app.route('/login', methods=["GET", "POST"])
 def login():
@@ -228,21 +253,26 @@ def login():
     publicAddress = data['publicAddress']
     sql = '''
     SELECT 
-    u.id as user_id, u.email, u.details, ud.details as user_data
+    u.id as user_id, 
+    u.email, 
+    u.details,
+    case when s.details ->> 'stripeApiKey' is not null then 1 else 0 end as has_stripe
     FROM 
     public.users as u left join
-    public.user_data as ud on u.id = ud.user_id
+    public.team_membership as tm on u.id = tm.user_id left join
+    public.secrets as s on tm.team_id = s.team_id
     WHERE 
     u.details ->> 'publicAddress' = '{publicAddress}'
     order by u.created_on desc
     '''.format(publicAddress = publicAddress)
     df = pd.read_sql(sql, db.engine)
     if len(df) > 0:
+        user = df.details[0]
+        user['hasStripe'] = bool(df.has_stripe[0] > 0)
         d = {
             'ok': True,
             'new': False,
-            'user': df.details[0],
-            'userData': df.user_data[0]
+            'user': user,
         }
     else:
         userId = pints.postgres.insertUser(db.engine, email, data)
@@ -368,18 +398,23 @@ def get_metrics():
     *,
     1 as active
     from 
-    team_{teamId}.mrr_facts as mrr
+    "team_{teamId}_stripe".mrr_facts as mrr
     order by mrr.mrr_dt asc
     '''.format(teamId=user['team_id'])
     df = pd.read_sql(sql, db.engine)
     piv = df.pivot_table(index='mrr_month_dt', values=['mrr', 'active', 'churned_mrr'], aggfunc='sum')
     df = json.loads(df.to_json(orient='records'))
+    summary = piv.tail(3).to_dict(orient='records')
+    logger.info(f"piv summary: {summary}")
+    # summary = piv.tail(1).to_dict(orient='records')[0]
+    # prevMonth = piv.tail(2).to_dict(orient='records')[1]
     chart = metrics.getChart(df)
+    chart['summary'] = metrics.getSummary(summary)
     chart['url'] = pints.cabinet.file(chart)
     # logger.info(f'chart: {chart}')
     # app.wsgi_app.add_files('static/', prefix='assets/')
     chart['title'] = 'MRR'
-    # res = pints.slack.push(chart)
+    res = pints.slack.push(chart)
     # logger.info(f'pints.slack.push: {res}')
     # res = pints.sheets.push(
     #     {
@@ -390,7 +425,7 @@ def get_metrics():
     #     }
     #         )
     # logger.info(f'pints.slack.push: {res}')
-    # logger.info(f'piv: {piv}')
+    
     ret = {
         'ok': True, 
         'data': df,
