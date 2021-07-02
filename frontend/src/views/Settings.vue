@@ -296,19 +296,26 @@
             Sheets
           </div>
           <p class="max-w-2xl text-sm text-gray-500">
-            Get your SaaS metrics in Google Sheets
+            Get your SaaS metrics in Google Sheets (
+              <a 
+                href="https://developers.google.com/sheets/api/guides/authorizing#APIKey"
+                class="font-medium text-indigo-600 hover:text-indigo-500"
+                target="_blank"
+              >
+                see here to get a key
+              </a>
           </p>
           <div 
             class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4"
           >
             <div class="col-span-6 sm:col-span-2">
-              <label for="stripe_api_key" class="block text-sm font-medium text-gray-700">API Key</label>
+              <label for="sheets_creds" class="block text-sm font-medium text-gray-700">Sheets Credentials</label>
               <input 
                 type="password" 
                 v-model="stripeApiKey"
-                ref="stripe_api_key" 
-                name="stripe_api_key" 
-                id="stripe_api_key" 
+                ref="sheets_creds" 
+                name="sheets_creds" 
+                id="sheets_creds" 
                 autocomplete="password" 
                 class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-gray-900 focus:border-gray-900 sm:text-sm" 
               />
