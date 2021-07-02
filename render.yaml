@@ -8,10 +8,15 @@ services:
     plan: starter # optional (defaults to starter)
     branch: master # optional (uses repo default)
     dockerfilePath: ./backend/Dockerfile
-    dockerCommand: . # ./backend/Dockerfile
+    # dockerCommand: . 
     dockerContext: ./backend
     numInstances: 1 # optional (defaults to 1)
     healthCheckPath: /ping
+    envVars:
+      - key: WORKERS
+        value: 4
+      - key: PORT
+        value: 5000
   # A static site
   - type: web
     env: static
