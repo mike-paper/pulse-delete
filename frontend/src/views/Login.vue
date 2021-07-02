@@ -214,7 +214,7 @@ export default {
     },
     getApiUrl(endpoint) {
       if (process.env.NODE_ENV != 'production') return `http://127.0.0.1:5000/${endpoint}`
-      return `https://paperapi.onrender.com/${endpoint}`
+      return `https://pulse-backend.onrender.com/${endpoint}`
     },
     getAppUrl(endpoint) {
       if (process.env.NODE_ENV != 'production') return `http://localhost:8080/${endpoint}`

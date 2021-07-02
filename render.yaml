@@ -24,8 +24,8 @@ services:
     name: pulse-frontend
     repo: https://github.com/mike-paper/pulse.git
     branch: master # optional (uses repo default)
-    buildCommand: yarn build
-    staticPublishPath: ./build
+    buildCommand: cd frontend && yarn add @vue/cli-service && yarn build
+    staticPublishPath: frontend/dist
     pullRequestPreviewsEnabled: true # optional
     headers:
       - path: /*
