@@ -11,7 +11,10 @@ RUN apt-get install -y libglib2.0-0 \
     libnss3 \
     libgconf-2-4 \
     libfontconfig1
-RUN apt-get install -y google-chrome-stable=90.0.4430.212-1
+
+ENV CHROME_VERSION=91.0.4472.114
+RUN apt-get install -y google-chrome-stable=${CHROME_VERSION}-1
+# RUN apt-get -qqy install google-chrome-stable=${CHROME_VERSION}-1
 
 # Set up Chromedriver Environment variables
 ENV CHROMEDRIVER_VERSION 90.0.4430.24

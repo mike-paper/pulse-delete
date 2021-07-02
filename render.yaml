@@ -7,6 +7,8 @@ services:
     region: oregon # optional (defaults to oregon)
     plan: starter # optional (defaults to starter)
     branch: master # optional (uses repo default)
+    dockerCommand: ./backend/Dockerfile
+    dockerContext: ./backend
     numInstances: 1 # optional (defaults to 1)
     healthCheckPath: /ping
   # A static site
