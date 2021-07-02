@@ -12,14 +12,14 @@ RUN apt-get install -y libglib2.0-0 \
     libgconf-2-4 \
     libfontconfig1
 
-ENV CHROME_VERSION=91.0.4472.114
-RUN apt-get install -y google-chrome-stable=${CHROME_VERSION}-1
-# RUN apt-get -qqy install google-chrome-stable=${CHROME_VERSION}-1
-
-# Set up Chromedriver Environment variables
 ENV CHROMEDRIVER_VERSION 90.0.4430.24
 ENV CHROMEDRIVER_DIR /chromedriver
 RUN mkdir $CHROMEDRIVER_DIR
+
+# RUN apt-get install -y google-chrome-stable=${CHROMEDRIVER_VERSION}-1
+
+# Set up Chromedriver Environment variables
+
 
 # Download and install Chromedriver
 RUN wget -q --continue -P $CHROMEDRIVER_DIR "http://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip"
