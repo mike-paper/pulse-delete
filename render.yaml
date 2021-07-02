@@ -3,7 +3,7 @@ services:
   - type: web
     name: pulse-backend
     env: docker
-    repo: https://github.com/mike-paper/pulse/tree/master/backend.git # optional
+    repo: https://github.com/mike-paper/pulse.git # optional
     region: oregon # optional (defaults to oregon)
     plan: starter # optional (defaults to starter)
     branch: master # optional (uses repo default)
@@ -25,7 +25,8 @@ services:
   - type: web
     env: static
     name: pulse-frontend
-    repo: https://github.com/mike-paper/pulse/tree/master/frontend.git
+    repo: https://github.com/mike-paper/pulse.git
+    branch: master # optional (uses repo default)
     buildCommand: yarn build
     staticPublishPath: ./build
     pullRequestPreviewsEnabled: true # optional
