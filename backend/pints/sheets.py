@@ -10,11 +10,12 @@ from google.oauth2 import service_account
 from logger import logger
 
 j = os.environ.get('PAPER_GOOGLE_SERVICE_ACCOUNT_CREDENTIALS')
-service_account_info = json.loads(j)
-service_account_info['private_key'] = service_account_info['private_key'].replace('\\n', '\n')
-# service_account_info = j
-credentials = service_account.Credentials.from_service_account_info(
-    service_account_info)
+if j:
+    service_account_info = json.loads(j)
+    service_account_info['private_key'] = service_account_info['private_key'].replace('\\n', '\n')
+    # service_account_info = j
+    credentials = service_account.Credentials.from_service_account_info(
+        service_account_info)
 
 LIMIT_ERROR = 'action would increase the number of cells in the workbook above the limit'
 FULL_LIMIT_ERROR = 'This action would increase the number of cells in the workbook above the limit of 5000000 cells.'
@@ -36,7 +37,7 @@ for k in alphabet.keys():
     alphabetRev[alphabet[k]] = k
 
 def test():
-    print('credentials: ', credentials)
+    return True
 
 def push(d):
     df = d['df']

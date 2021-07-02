@@ -293,6 +293,30 @@
         </div>
         <div class="pt-8">
           <div class="font-medium leading-6 text-gray-900 text-lg">
+            Sheets
+          </div>
+          <p class="max-w-2xl text-sm text-gray-500">
+            Get your SaaS metrics in Google Sheets
+          </p>
+          <div 
+            class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4"
+          >
+            <div class="col-span-6 sm:col-span-2">
+              <label for="stripe_api_key" class="block text-sm font-medium text-gray-700">API Key</label>
+              <input 
+                type="password" 
+                v-model="stripeApiKey"
+                ref="stripe_api_key" 
+                name="stripe_api_key" 
+                id="stripe_api_key" 
+                autocomplete="password" 
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-gray-900 focus:border-gray-900 sm:text-sm" 
+              />
+            </div>
+          </div>
+        </div>
+        <div class="pt-8">
+          <div class="font-medium leading-6 text-gray-900 text-lg">
             Slack
           </div>
           <p class="max-w-2xl text-sm text-gray-500">
