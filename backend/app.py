@@ -415,7 +415,7 @@ def get_metrics():
     # app.wsgi_app.add_files('static/', prefix='assets/')
     # chart['title'] = 'MRR'
     logger.info(f"piv summary: {toSlack}")
-    res = pints.slack.push(toSlack)
+    # res = pints.slack.push(toSlack)
     # logger.info(f'pints.slack.push: {res}')
     # res = pints.sheets.push(
     #     {
