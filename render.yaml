@@ -9,18 +9,6 @@ services:
     branch: master # optional (uses repo default)
     numInstances: 1 # optional (defaults to 1)
     healthCheckPath: /ping
-    envVars:
-      - key: REDIS_HOST
-        fromService:
-          name: redis
-          type: pserv
-          property: host # available properties are listed below
-      - key: REDIS_PORT
-        fromService:
-          name: redis
-          type: pserv
-          property: port
-      - fromGroup: conc-settings
   # A static site
   - type: web
     env: static
