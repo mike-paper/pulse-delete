@@ -28,7 +28,7 @@ RUN unzip $CHROMEDRIVER_DIR/chromedriver* -d $CHROMEDRIVER_DIR
 # Put Chromedriver into the PATH
 ENV PATH $CHROMEDRIVER_DIR:$PATH
 # update config to not run as root
-RUN sed -i 's|exec -a "$0" "$HERE/chrome" "$@"|exec -a "$0" "$HERE/chrome" "$@" --no-sandbox --user-data-dir |g' /opt/google/chrome/google-chrome
+# RUN sed -i 's|exec -a "$0" "$HERE/chrome" "$@"|exec -a "$0" "$HERE/chrome" "$@" --no-sandbox --user-data-dir |g' /opt/google/chrome/google-chrome
 
 COPY requirements.txt /app/
 RUN pip3 --default-timeout=600 install -r /app/requirements.txt
