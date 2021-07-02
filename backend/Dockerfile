@@ -1,4 +1,10 @@
+# syntax = docker/dockerfile:1.2
+
 FROM python:3.9
+
+RUN --mount=type=secret,id=_env,dst=/etc/secrets/.env cat /etc/secrets/.env
+RUN echo "PAPER_AWS_SECRET_ACCESS_KEY: $PAPER_AWS_SECRET_ACCESS_KEY"
+
 
 # Update the package list and install chrome
 # Set up the Chrome PPA
