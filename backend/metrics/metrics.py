@@ -49,12 +49,12 @@ vegaSpec = {
             "timeUnit": "yearmonth", 
             "type": "temporal",
             "title": None,
-            "axis": {
-                "values": [
-                    {"year": 2019, "month": "may", "date": 1},
-                    {"year": 2021, "month": "may", "date": 1}
-                ]
-                }
+            # "axis": {
+            #     "values": [
+            #         {"year": 2019, "month": "may", "date": 1},
+            #         {"year": 2021, "month": "may", "date": 1}
+            #     ]
+            #     }
         },
         "y": {
             "field": "mrr", 
@@ -66,36 +66,20 @@ vegaSpec = {
     "data": {"values": []},
 }
 
-def getMrrByItem(df):
-    mrrByItem = []
-    for row in df.itertuples(index=True, name='Pandas'):
-        mrr = 0
-        maxUpTo = 0
-        quantity = row.quantity
-        tiers = row.tiers
-        if tiers:
-            for tier in tiers:
-                ct = 1
-                while ct <= quantity:
-                    upTo = tier.get('up_to', 9999999999999999)
-                    if not upTo:
-                        upTo = 9999999999999999
-                    if ct <= upTo:
-                        mrr+= tier['amount']
-        #                 return mrr
-                    elif ct > upTo:
-                        pass
-                    else:
-                        mrr+= tier['amount']
-                    ct+=1
-        mrrByItem.append(mrr)
-    df['items_plan_amount'] = mrrByItem
-    return df
-
-def getChart(d):
+def getMrrChart(d):
     chartId = uuid.uuid4().hex
     # spec = json.loads(specs['mrr'])
     vegaSpec['data']['values'] = d
+    chart = altair.Chart.from_dict(vegaSpec)
+    filename = f'./static/{chartId}.png'
+    altair_saver.save(chart, filename, method='selenium', webdriver=driver)
+    return {'ok': True, 'chartId': chartId, 'filename': filename}
+
+def getCustomerChart(d):
+    chartId = uuid.uuid4().hex
+    vegaSpec['data']['values'] = d
+    vegaSpec['description'] = 'Customers by Month'
+    vegaSpec['encoding']['y']['field'] = 'active'
     chart = altair.Chart.from_dict(vegaSpec)
     filename = f'./static/{chartId}.png'
     altair_saver.save(chart, filename, method='selenium', webdriver=driver)
@@ -140,7 +124,7 @@ def getSummary(last3):
     summary['customerGrowthPrcntRounded'] = round(summary['customerGrowthPrcnt'] * 100, 1)
     # \n\n<https://trypaper.io|20% of your customers> account for xx% of your MRR"
 
-    summary['customerMsg'] = f"You current have {summary['currentCustomers']} customers :tada: \n" 
+    summary['customerMsg'] = f"You currently have {summary['currentCustomers']} customers :tada: \n" 
     summary['customerMsg'] += f":{summary['customersArrow']}: "
     summary['customerMsg'] += f"{summary['customerGrowthPrcntRounded']}% ({summary['customerGrowth']}) MTD."
     return summary

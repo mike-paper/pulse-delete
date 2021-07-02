@@ -10,8 +10,8 @@ if AWS_ACCESS_KEY_ID:
 
 container = storage.get_container('paper-metrics')
 
-def file(p):
-    blob = container.upload_blob(p['filename'], acl='public-read')
+def file(filename):
+    blob = container.upload_blob(filename, acl='public-read')
     url = blob.generate_download_url()
     if '?' in url:
         url = url.split('?')[0]

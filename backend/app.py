@@ -86,13 +86,10 @@ db = SQLAlchemy(app)
 # testStripe = pints.stripe.getObject(db.engine, 1, 'invoices')
 # testStripe = pints.stripe.getAll(db.engine, 4)
 
-def getDbt():
-    with open(r'./dbt/models/stripe/models.yml') as file:
-        d = yaml.safe_load(file)
-        logger.info(f'getDbt: {d}')
-    return d
-
-# testStripe = getDbt()
+@app.route('/ping', methods=["GET"])
+def ping():
+    j = {'ok': True}
+    return json.dumps(j), 200, {'ContentType':'application/json'}
 
 @app.route('/get_stripe', methods=["GET", "POST"])
 def get_stripe():
@@ -107,7 +104,7 @@ def get_dbt():
     data = flask.request.get_json()
     logger.info(f'handle_app_submission: {data}')
     user = getUser(data)
-    d = getDbt()
+    d = pints.modeling.getDbt()
     return json.dumps({'ok' : True, 'data': d}), 200, {'ContentType':'application/json'}
 
 @app.route('/get_raw_counts', methods=["GET", "POST"])
@@ -408,13 +405,17 @@ def get_metrics():
     logger.info(f"piv summary: {summary}")
     # summary = piv.tail(1).to_dict(orient='records')[0]
     # prevMonth = piv.tail(2).to_dict(orient='records')[1]
-    chart = metrics.getChart(df)
-    chart['summary'] = metrics.getSummary(summary)
-    chart['url'] = pints.cabinet.file(chart)
+    toSlack = {}
+    chart = metrics.getMrrChart(df)
+    toSlack['mrrChartUrl'] = pints.cabinet.file(chart['filename'])
+    chart = metrics.getCustomerChart(df)
+    toSlack['customerChartUrl'] = pints.cabinet.file(chart['filename'])
+    toSlack['summary'] = metrics.getSummary(summary)
     # logger.info(f'chart: {chart}')
     # app.wsgi_app.add_files('static/', prefix='assets/')
-    chart['title'] = 'MRR'
-    res = pints.slack.push(chart)
+    # chart['title'] = 'MRR'
+    logger.info(f"piv summary: {toSlack}")
+    res = pints.slack.push(toSlack)
     # logger.info(f'pints.slack.push: {res}')
     # res = pints.sheets.push(
     #     {

@@ -111,30 +111,40 @@ with annuals as (
 	from mrr2 as mrr left join
 	{{ref('customers')}} as c on mrr.customer_id = c.customer_id left join
 	{{ref('customer_emails')}} as ce on mrr.customer_id = ce.customer_id 
+), mrr4 as (
+	select mrr.*,
+	date_trunc('month', mrr.mrr_dt) as mrr_month_dt,
+	prev_mrr.mrr as prev_mrr,
+	case 
+	when prev_mrr.mrr is null then 'new'
+	when mrr.mrr > prev_mrr.mrr then 'expansion'
+	when mrr.mrr < prev_mrr.mrr then 'churn'
+	when date_trunc('month', mrr.canceled_dt) = date_trunc('month', mrr.mrr_dt) then 'churn'
+	else 'same' end as mrr_status,
+	case 
+	when prev_mrr.mrr is null then 0
+	when date_trunc('month', mrr.canceled_dt) = date_trunc('month', mrr.mrr_dt) then mrr.mrr
+	when mrr.mrr < prev_mrr.mrr then prev_mrr.mrr - mrr.mrr
+	else 0 end as churned_mrr,
+	case 
+	when prev_mrr.mrr is null then 0
+	when mrr.mrr > prev_mrr.mrr then mrr.mrr - prev_mrr.mrr
+	else 0 end as expansion_mrr,
+	case 
+	when prev_mrr.mrr is null then mrr.mrr
+	else 0 end as new_mrr,
+	prev_mrr.mrr_dt as prev_mrr_dt
+	from mrr3 as mrr left join
+	mrr3 as prev_mrr on mrr.customer_id = prev_mrr.customer_id and
+							date_trunc('month', mrr.mrr_dt) = date_trunc('month', prev_mrr.mrr_dt + interval '1 month')
 )
 
-select mrr.*,
-date_trunc('month', mrr.mrr_dt) as mrr_month_dt,
-prev_mrr.mrr as prev_mrr,
+select 
+mrr.*,
 case 
-when prev_mrr.mrr is null then 'new'
-when mrr.mrr > prev_mrr.mrr then 'expansion'
-when mrr.mrr < prev_mrr.mrr then 'churn'
-when date_trunc('month', mrr.canceled_dt) = date_trunc('month', mrr.mrr_dt) then 'churn'
-else 'same' end as mrr_status,
-case 
-when prev_mrr.mrr is null then 0
-when date_trunc('month', mrr.canceled_dt) = date_trunc('month', mrr.mrr_dt) then mrr.mrr
-when mrr.mrr < prev_mrr.mrr then prev_mrr.mrr - mrr.mrr
-else 0 end as churned_mrr,
-case 
-when prev_mrr.mrr is null then 0
-when mrr.mrr > prev_mrr.mrr then mrr.mrr - prev_mrr.mrr
-else 0 end as expansion_mrr,
-case 
-when prev_mrr.mrr is null then mrr.mrr
-else 0 end as new_mrr,
-prev_mrr.mrr_dt as prev_mrr_dt
-from mrr3 as mrr left join
-mrr3 as prev_mrr on mrr.customer_id = prev_mrr.customer_id and
-						date_trunc('month', mrr.mrr_dt) = date_trunc('month', prev_mrr.mrr_dt + interval '1 month')
+when mrr.mrr_month_dt = max_month.mrr_month_dt then 1
+else 0 end as current_month,
+cume_dist() OVER (PARTITION BY mrr.mrr_month_dt ORDER BY mrr.mrr) as mrr_percentile,
+ntile(10) OVER (PARTITION BY mrr.mrr_month_dt ORDER BY mrr.mrr) as mrr_rank,
+from mrr4 as mrr left join
+(select max(mrr4.mrr_month_dt) as mrr_month_dt from mrr4) as max_month on mrr.mrr_month_dt = max_month.mrr_month_dt

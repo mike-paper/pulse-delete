@@ -380,6 +380,9 @@ export default {
       this.$router.push({ name: 'Login'})
     },
     navClick(nav) {
+      if (nav.href == 'Capital') {
+        window.open('https://trypaper.io?ref=pulse', '_blank').focus();
+      }
       console.log('nav: ', nav)
       this.$router.push({ name: nav.href})
     },

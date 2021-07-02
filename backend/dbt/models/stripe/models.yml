@@ -1,70 +1,6 @@
 version: 2
 
 models:
-  - name: plans
-    description: > 
-      Plans https://stripe.com/docs/api/plans
-    docs:
-      show: true
-    columns:
-      - name: plan_id
-        description: Plan ID
-        meta:
-          dimension:
-            label: Plan ID
-          measures:
-            plans:
-              label: Plans
-              type: count
-      - name: name
-        description: Name
-        meta:
-          dimension:
-            label: Name
-          measures:
-            customers:
-              label: Customers
-              type: count
-      - name: created_on
-        description: Plan created on
-        meta:
-          dimension:
-            label: Created On
-            timeframes: [week, month, year]
-  - name: customers
-    description: > 
-      Customers https://stripe.com/docs/api/customers
-    docs:
-      show: true
-    meta:
-      measures:
-        total:
-          type: count
-          label: Count
-        uniques:
-          sql: count(distinct(email))
-          label: Unique
-    columns:
-      - name: customer_id
-        description: Customer ID
-        meta:
-          dimension:
-            label: Customer ID
-      - name: email
-        description: Customer email
-        meta:
-          dimension:
-            label: Email
-          measures:
-            customers:
-              label: Customers
-              type: count
-      - name: created_on
-        description: Customer created on
-        meta:
-          dimension:
-            label: Customer Start Date
-            timeframes: [week, month, year]
   - name: mrr_facts
     description: > 
       MRR (monthly recurring revenue) by month at customer level
@@ -72,6 +8,9 @@ models:
       show: true
     meta:
       label: Revenue History
+      joins:
+        - join: customers
+          sql_on: mrr_facts.email = customers.email
       # measures:
       #   total:
       #     aggregation: count
@@ -139,33 +78,67 @@ models:
             churned_mrr_sum:
               label: Churned MRR
               type: sum
-    # customer_id
-    # invoice_id
-    # subscription_id
-    # mrr_dt
-    # created_on
-    # total
-    # amount_due
-    # amount_off
-    # percent_off_precise
-    # coupon_duration
-    # plan_interval
-    # plan_id
-    # base_mrr
-    # canceled_dt
-    # discounted_mrr
-    # fully_discounted_mrr
-    # invoice_status
-    # mrr
-    # mrr_month_dt
-    # prev_mrr
-    # mrr_status
-    # churned_mrr
-    # expansion_mrr
-    # new_mrr
-    # prev_mrr_dt
-  # - name: invoices
+    # - name: plans
   #   description: > 
-  #     Invoices https://stripe.com/docs/api/invoices
+  #     Plans https://stripe.com/docs/api/plans
   #   docs:
   #     show: true
+  #   columns:
+  #     - name: plan_id
+  #       description: Plan ID
+  #       meta:
+  #         dimension:
+  #           label: Plan ID
+  #         measures:
+  #           plans:
+  #             label: Plans
+  #             type: count
+  #     - name: name
+  #       description: Name
+  #       meta:
+  #         dimension:
+  #           label: Name
+  #         measures:
+  #           customers:
+  #             label: Customers
+  #             type: count
+  #     - name: created_on
+  #       description: Plan created on
+  #       meta:
+  #         dimension:
+  #           label: Created On
+  #           timeframes: [week, month, year]
+  - name: customers
+    description: > 
+      Customers https://stripe.com/docs/api/customers
+    docs:
+      show: true
+    meta:
+      measures:
+        total:
+          type: count
+          label: Count
+        uniques:
+          sql: count(distinct(email))
+          label: Unique
+    columns:
+      - name: customer_id
+        description: Customer ID
+        meta:
+          dimension:
+            label: Customer ID
+      - name: email
+        description: Customer email
+        meta:
+          dimension:
+            label: Email
+          measures:
+            customers:
+              label: Customers
+              type: count
+      - name: created_on
+        description: Customer created on
+        meta:
+          dimension:
+            label: Customer Start Date
+            timeframes: [week, month, year]

@@ -1,0 +1,42 @@
+services:
+  # A Docker web service
+  - type: web
+    name: pulse-backend
+    env: docker
+    repo: https://github.com/mike-paper/pulse/tree/master/backend.git # optional
+    region: oregon # optional (defaults to oregon)
+    plan: starter # optional (defaults to starter)
+    branch: master # optional (uses repo default)
+    numInstances: 1 # optional (defaults to 1)
+    healthCheckPath: /ping
+    envVars:
+      - key: REDIS_HOST
+        fromService:
+          name: redis
+          type: pserv
+          property: host # available properties are listed below
+      - key: REDIS_PORT
+        fromService:
+          name: redis
+          type: pserv
+          property: port
+      - fromGroup: conc-settings
+  # A static site
+  - type: web
+    env: static
+    name: pulse-frontend
+    repo: https://github.com/mike-paper/pulse/tree/master/frontend.git
+    buildCommand: yarn build
+    staticPublishPath: ./build
+    pullRequestPreviewsEnabled: true # optional
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: sameorigin
+    routes:
+      - type: redirect
+        source: /old
+        destination: /new
+      - type: rewrite
+        source: /a/*
+        destination: /a

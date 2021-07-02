@@ -1,8 +1,15 @@
 import os
 import subprocess
 import json
+import yaml
 
 from logger import logger
+
+def getDbt():
+    with open(r'./dbt/models/stripe/models.yml') as file:
+        d = yaml.safe_load(file)
+        logger.info(f'getDbt: {d}')
+    return d
 
 def runDbt(teamId):
     logger.info(f"run_dbt user: {teamId}")

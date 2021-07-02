@@ -96,8 +96,20 @@ def dbt2Sql(d, schema):
                         tables.append(model)
                         tableNames.append(model['name'])
     sql+= '\nfrom\n'
-    for idx, tableName in enumerate(tableNames):
-        sql+= f"{schema}.{tableName} as {tableName}"
+    join = False
+    for idx, table in enumerate(tables):
+        logger.info(f'table: {table}')
+        sql+= f"{schema}.{table['name']} as {table['name']}"
+        if join:
+            sql+= f" on {join}"
+            join = False
+        if idx < len(tables)-1:
+            defaultJoin = [{'sql_on': '1=1'}]
+            join = table['meta'].get('joins', defaultJoin)[0]['sql_on']
+            # TODO: support multiple joins
+            sql+= f" left join \n"
+            logger.info(f'adding join: {join}')
+        
     if hasGroup:
         sql+= groupBy
     if hasOrder:

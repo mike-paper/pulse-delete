@@ -18,7 +18,7 @@ def testPush():
                     },
                 "accessory": {
                     "type": "image",
-                    "image_url": "https://seekwell.ngrok.io/assets/altair_saverchart.png",
+                    "image_url": "",
                     "alt_text": "alt text for image"
                 }
             }
@@ -50,7 +50,7 @@ def push(d):
                     },
                     "accessory": {
                         "type": "image",
-                        "image_url": d['url'],
+                        "image_url": d['mrrChartUrl'],
                         "alt_text": "MRR"
                     }
                 },
@@ -73,7 +73,7 @@ def push(d):
                     },
                     "accessory": {
                         "type": "image",
-                        "image_url": d['url'],
+                        "image_url": d['customerChartUrl'],
                         "alt_text": "MRR"
                     }
                 },
