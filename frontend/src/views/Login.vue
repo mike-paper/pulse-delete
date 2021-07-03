@@ -75,12 +75,12 @@
         </button>
       </div>
     </div>
-    <div class="border-t-2 flex justify-center pt-8">
+    <!-- <div class="border-t-2 flex justify-center pt-8">
       <div class="-mt-12 absolute bg-white px-4 text-gray-500">or</div>
       <div class="cursor-pointer" @click="handleGoogleLogin">
         <img src="/sign-in-with-google.svg">
       </div>
-    </div>
+    </div> -->
     
   </div>
 </div>
