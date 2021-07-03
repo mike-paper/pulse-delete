@@ -29,14 +29,10 @@ services:
     pullRequestPreviewsEnabled: true # optional
     domains:
       - pulse.trypaper.io
-    headers:
-      - path: /*
-        name: X-Frame-Options
-        value: sameorigin
     routes:
-      - type: redirect
-        source: /old
-        destination: /new
       - type: rewrite
-        source: /a/*
-        destination: /a
+        source: /*
+        destination: /index.html
+      - type: redirect
+        source: /
+        destination: /metrics

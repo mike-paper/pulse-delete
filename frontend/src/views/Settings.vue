@@ -312,7 +312,7 @@
               <label for="sheets_creds" class="block text-sm font-medium text-gray-700">Sheets Credentials</label>
               <input 
                 type="password" 
-                v-model="stripeApiKey"
+                v-model="sheetsCreds"
                 ref="sheets_creds" 
                 name="sheets_creds" 
                 id="sheets_creds" 
@@ -472,6 +472,7 @@ export default {
           ',chat:write.public,chat:write,files:write&user_scope=',
         dbtLogs: [],
         stripeApiKey: '',
+        sheetsCreds: '',
         runningDbt: false,
         updatingStripeKey: false,
         analysisChanged: false,

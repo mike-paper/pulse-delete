@@ -69,7 +69,13 @@ export default {
       axios.post(path, userMetadata)
         .then((res) => {
           console.log('did login: ', res.data)
-          // this.render()
+          if (this.$route.query.goto) {
+            this.$router.push({ name: this.$route.query.goto, params: { user: userMetadata }})
+          } else if (res.data.new) {
+            this.$router.push({ name: 'Settings', params: { user: userMetadata }})
+          } else {
+            this.$router.push({ name: 'Metrics', params: { user: userMetadata }})
+          }
         })
         .catch((error) => {
           console.error(error)

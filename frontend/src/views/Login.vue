@@ -40,7 +40,7 @@
       <div class="rounded-md shadow-sm -space-y-px">
         <div>
           <label for="email-address" class="sr-only">Email address</label>
-          <input v-model="email" id="email-address" name="email" type="email" autocomplete="email" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Email address">
+          <input v-model="email" ref="email" id="email-address" name="email" type="email" autocomplete="email" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Email address">
         </div>
         <!-- <div>
           <label for="password" class="sr-only">Password</label>
@@ -143,6 +143,8 @@ export default {
           p => this.render()
         )
         // this.render();
+      } else {
+        this.$refs.email.focus()
       }
     },
     async handleGoogleLogin(e) {
@@ -184,12 +186,7 @@ export default {
         console.log('logged in...', userMetadata.email)
         const idToken = await magic.user.getIdToken();
         this.loginUser(userMetadata, idToken)
-        if (this.$route.query.goto) {
-          this.$router.push({ name: this.$route.query.goto, params: { user: userMetadata }})
-        } else {
-          this.$router.push({ name: 'Metrics', params: { user: userMetadata }})
-        }
-        this.checkedIfLoggedIn = true
+        // this.checkedIfLoggedIn = true
       } else {
         this.checkedIfLoggedIn = true
       }
@@ -256,6 +253,13 @@ export default {
       axios.post(path, userMetadata)
         .then((res) => {
           console.log('did login: ', res.data)
+          if (this.$route.query.goto) {
+            this.$router.push({ name: this.$route.query.goto, params: { user: userMetadata }})
+          } else if (res.data.new) {
+            this.$router.push({ name: 'Settings', params: { user: userMetadata }})
+          } else {
+            this.$router.push({ name: 'Metrics', params: { user: userMetadata }})
+          }
         })
         .catch((error) => {
           console.error(error)

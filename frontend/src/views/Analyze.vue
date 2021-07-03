@@ -266,6 +266,7 @@
               :class="{
                 'cursor-pointer': !isDateColumn(column),
                 'hover:bg-gray-200': !isDateColumn(column),
+                'text-red-400': true,
                 'font-bold': isSelected(index, index2, column, 'dimension') && !isDateColumn(column),
                 'rounded': true,
                 'py-1': true, 
@@ -309,6 +310,7 @@
                 :class="{
                   'cursor-pointer': true,
                   'hover:bg-gray-200': true,
+                  'text-blue-400': true,
                   'rounded': true,
                   'font-bold': isMeasureSelected(index, index3, measureName),
                   'py-1': true, 

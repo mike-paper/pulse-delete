@@ -9,7 +9,8 @@ export const store = {
       gotDbt: false,
       hideSidebar: false,
       user: {
-        oauth: false
+        oauth: false,
+        hasStripe: false
       },
       settings: {
         notifications: {

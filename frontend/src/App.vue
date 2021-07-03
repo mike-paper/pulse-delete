@@ -18,11 +18,11 @@
               </TransitionChild>
               <div class="pt-5 pb-4">
                 <div class="flex-shrink-0 flex items-center px-4">
-                  <img class="h-8 w-auto" src="/paper-logo.png" alt="Logo">
+                  <img class="h-8 w-auto" src="/paper-white-logo.png" alt="Logo">
                 </div>
                 <nav aria-label="Sidebar" class="mt-5">
                   <div class="px-2 space-y-1">
-                    <div @click="navClick(item)" v-for="item in navigation" :key="item.name" class="group p-2 rounded-md flex items-center text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                    <div @click="navClick(item)" v-for="item in navigation.filter(nav => true === storeState.user.hasStripe)" :key="item.name" class="group p-2 rounded-md flex items-center text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900">
                       <component :is="item.icon" class="mr-4 h-6 w-6 text-gray-400 group-hover:text-gray-500" aria-hidden="true" />
                       {{ item.name }}
                     </div>
@@ -104,10 +104,10 @@
           <div class="flex flex-col h-0 flex-1 bg-gray-900">
             <div class="flex-1 flex flex-col">
               <div class="flex-shrink-0 bg-gray-800 py-4 flex items-center justify-center">
-                <img class="h-8 w-auto" src="/paper-logo.png" alt="Logo">
+                <img class="h-8 w-auto" src="/paper-white-logo.png" alt="Logo">
               </div>
               <nav aria-label="Sidebar" class="py-6 flex flex-col items-center space-y-3">
-                <div @click="navClick(item)" v-for="item in navigation" :key="item.name" class="cursor-pointer flex items-center p-4 rounded-lg text-gray-100 hover:bg-gray-700">
+                <div @click="navClick(item)" v-for="item in navigation.filter(nav => true === storeState.user.hasStripe)" :key="item.name" class="cursor-pointer flex items-center p-4 rounded-lg text-gray-100 hover:bg-gray-700">
                   <component :is="item.icon" class="h-6 w-6" aria-hidden="true" />
                   <span class="sr-only">{{ item.name }}</span>
                 </div>
@@ -382,6 +382,7 @@ export default {
     navClick(nav) {
       if (nav.href == 'Capital') {
         window.open('https://trypaper.io?ref=pulse', '_blank').focus();
+        return
       }
       console.log('nav: ', nav)
       this.$router.push({ name: nav.href})
