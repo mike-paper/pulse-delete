@@ -176,6 +176,7 @@ export default {
     // },
     /* 3. Implement Render Function */
     async render() {
+      this.checkedIfLoggedIn = false
       this.storeState.isLoggedIn = await magic.user.isLoggedIn();
       /* Show login form if user is not logged in */
       if (this.storeState.isLoggedIn) {
@@ -255,7 +256,7 @@ export default {
           console.log('did login: ', res.data)
           if (this.$route.query.goto) {
             this.$router.push({ name: this.$route.query.goto, params: { user: userMetadata }})
-          } else if (res.data.new) {
+          } else if (res.data.new || (res.data.user && !res.data.user.hasStripe)) {
             this.$router.push({ name: 'Settings', params: { user: userMetadata }})
           } else {
             this.$router.push({ name: 'Metrics', params: { user: userMetadata }})
