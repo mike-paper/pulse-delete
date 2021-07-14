@@ -115,7 +115,7 @@ def getObject(engine, teamId, jobUuid, obj):
 def checkDbtRun(engine, teamId):
     logger.info(f'checkDbtRun {teamId}')
     running = pints.postgres.getJobSummary(engine, teamId)
-    running = running[running.status == 'running']
+    running = running[(running.status == 'running') & (running.type == 'stripe')]
     logger.info(f'checkDbtRun running {running}')
     if len(running) == 0:
         try:

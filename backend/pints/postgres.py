@@ -8,6 +8,23 @@ import uuid
 from logger import logger
 import pints
 
+teamSettings = {
+    'notifications': {
+        'alerts': {
+            'slack': True,
+            'email': False,
+            },
+        'weekly': {
+            'slack': True,
+            'email': True,
+            },
+        'monthly': {
+            'slack': True,
+            'email': True,
+            },
+        }
+    }
+
 def insertRows(engine, table, rows, teamId):
     with engine.connect() as con:
         for row in rows:
@@ -32,6 +49,22 @@ def getMaxRecord(engine, table, teamId):
         statement = sqlalchemy.sql.text(sql)
         res = con.execute(statement).fetchone()[0]
         return res
+
+def getMaxJobRun(engine, teamId, schedule):
+    with engine.connect() as con:
+        sql = f'''
+        select j.created_on
+        from "public".jobs as j
+        where j.team_id = {teamId}
+        and j.details ->> 'type' = '{schedule}'
+        order by j.id desc
+        '''
+        statement = sqlalchemy.sql.text(sql)
+        res = con.execute(statement).fetchone()
+        if res:
+            return res[0]
+        else:
+            return False
 
 def deleteRows(engine, table, teamId):
     with engine.connect() as con:
@@ -60,7 +93,7 @@ def insertUser(engine, email, data):
 def insertTeam(engine, domain):
     with engine.connect() as con:
         teamUuid = uuid.uuid4().hex
-        d = { "public_uuid": teamUuid, "domain": domain, "details": json.dumps({}) }
+        d = { "public_uuid": teamUuid, "domain": domain, "details": json.dumps(teamSettings) }
         sql = '''
         INSERT INTO teams(public_uuid, domain, details) 
         VALUES(:public_uuid, :domain, :details)
@@ -90,6 +123,44 @@ def insertTeamMember(engine, teamId, userId):
         res = con.execute(statement, **d)
         teamMembershipId = res.fetchone()[0]
         return teamMembershipId
+
+def updateSettings(engine, teamId, details):
+    with engine.connect() as con:
+        d = { 
+            "details": json.dumps(details),
+            "team_id": teamId,
+            }
+        sql = '''
+        UPDATE public.teams
+        SET details = :details
+        WHERE id = :team_id
+        '''
+        statement = sqlalchemy.sql.text(sql)
+        res = con.execute(statement, **d)
+        return True
+
+def getSettings(engine, teamId):
+    with engine.connect() as con:
+        sql = f'''
+        select t.details
+        from "public".teams as t
+        where t.id = {teamId}
+        limit 1
+        '''
+        statement = sqlalchemy.sql.text(sql)
+        res = con.execute(statement).fetchone()
+        if res:
+            return res[0]
+        else:
+            return False
+
+def getTeams(engine):
+    sql = f'''
+    select t.id, t.domain, t.details
+    from "public".teams as t
+    '''
+    df = pd.read_sql(sql, engine)
+    return df.to_dict(orient='records')
 
 def createSecrets(engine, teamId):
     with engine.connect() as con:
@@ -157,54 +228,6 @@ def getStripeApiKey(engine, teamId):
             return pints.utils.decrypt(res['stripeApiKey'])
         return False
 
-def updateJob(engine, teamId, jobId, jobUuid, details):
-    logger.info(f'updateJob {jobId} {jobUuid}...')
-    with engine.connect() as con:
-        d = { 
-            "details": json.dumps(details),
-            "team_id": teamId,
-            "job_id": jobId,
-            "public_uuid": jobUuid,
-            }
-        
-        if jobId:
-            sql = '''
-            UPDATE public.jobs
-            SET details = :details
-            WHERE id = :job_id
-            '''
-            statement = sqlalchemy.sql.text(sql)
-            res = con.execute(statement, **d)
-            return jobId
-        else:
-            sql = '''
-            INSERT INTO public.jobs(team_id, public_uuid, details) 
-            VALUES(:team_id, :public_uuid, :details)
-            RETURNING id;
-            '''
-            statement = sqlalchemy.sql.text(sql)
-            logger.info(f'updateJob statement {statement}...')
-            res = con.execute(statement, **d).fetchone()
-            logger.info(f'updateJob res {res}...')
-            return res[0]
-
-def getJob(engine, jobUuid):
-    with engine.connect() as con:
-        sql = f'''
-        select details, updated_on
-        from public.jobs as j
-        where public_uuid = '{jobUuid}'
-        order by id desc
-        limit 1
-        '''
-        statement = sqlalchemy.sql.text(sql)
-        res = con.execute(statement).fetchone()
-        if not res:
-            return {'ok': False}
-        ret = res[0]
-        ret['updated_on'] = res[1].timestamp()
-        return {'ok': True, 'job': ret}
-
 def getRawTableCount(engine, teamId, table):
     with engine.connect() as con:
         schema = 'public'
@@ -263,13 +286,14 @@ def getJobSummary(engine, teamId):
 	team_id,
 	details ->> 'obj' as obj,
 	details ->> 'status' as "status",
+    details ->> 'type' as "type",
 	count(1) as ct,
 	max(j.id) as id
 	from "public".jobs as j
 	where 1=1
 	and team_id = {teamId}
 	group by
-	1, 2, 3
+	1, 2, 3, 4
     '''
     df = pd.read_sql(sql, engine)
     return df
@@ -298,3 +322,158 @@ def getRecentJobs(engine, teamId):
     df = df.set_index('public_uuid')
     df = df.to_dict(orient='index')
     return df
+
+def getSchedulerRow(engine):
+    sql = '''
+    SELECT *
+    FROM 
+    public.aps_scheduler
+    '''
+    try:
+        df = pd.read_sql(sql, engine)
+        return len(df) > 0
+    except:
+        return False
+
+def truncateTable(engine, table):
+    with engine.connect() as con:
+        sql = f'''
+        TRUNCATE "public".{table}
+        '''
+        statement = sqlalchemy.sql.text(sql)
+        try:
+            res = con.execute(statement)
+            return res
+        except Exception as e:
+            return False
+
+def updateJob(engine, teamId, jobId, jobUuid, details):
+    logger.info(f'updateJob {jobId} {jobUuid}...')
+    with engine.connect() as con:
+        d = { 
+            "details": json.dumps(details),
+            "team_id": teamId,
+            "job_id": jobId,
+            "public_uuid": jobUuid,
+            "status": details['status']
+            }
+        
+        if jobId:
+            sql = '''
+            UPDATE public.jobs
+            SET details = :details,
+                status = :status
+            WHERE id = :job_id
+            '''
+            statement = sqlalchemy.sql.text(sql)
+            res = con.execute(statement, **d)
+            return jobId
+        else:
+            sql = '''
+            INSERT INTO public.jobs(team_id, public_uuid, details) 
+            VALUES(:team_id, :public_uuid, :details)
+            RETURNING id;
+            '''
+            statement = sqlalchemy.sql.text(sql)
+            res = con.execute(statement, **d).fetchone()
+            logger.info(f'updateJob res {res}...')
+            return res[0]
+
+def updateJobStatus(engine, jobId, status, error=None):
+    with engine.connect() as con:
+        d = { 
+            "jobId": jobId,
+            "status": status,
+            "error": error,
+            }
+        sql = '''
+        UPDATE jobs 
+        SET status = :status,
+        details = jsonb_set(details, '{{status}}', :status::jsonb),
+        details = jsonb_set(details, '{{error}}', :error::jsonb),
+        where id = :jobId;
+        '''
+        statement = sqlalchemy.sql.text(sql)
+        res = con.execute(statement, **d).fetchone()
+        logger.info(f'updateJob res {res}...')
+        return res[0]
+
+def getJob(engine, jobUuid):
+    with engine.connect() as con:
+        sql = f'''
+        select details, updated_on
+        from public.jobs as j
+        where public_uuid = '{jobUuid}'
+        order by id desc
+        limit 1
+        '''
+        statement = sqlalchemy.sql.text(sql)
+        res = con.execute(statement).fetchone()
+        if not res:
+            return {'ok': False}
+        ret = res[0]
+        ret['updated_on'] = res[1].timestamp()
+        return {'ok': True, 'job': ret}
+
+def addJob(engine, teamId, details, jobUuid):
+    with engine.connect() as con:
+        d = { 
+            "details": json.dumps(details),
+            "team_id": teamId,
+            "status": details['status'],
+            "public_uuid": jobUuid
+            }
+        sql = '''
+        INSERT INTO public.jobs(team_id, public_uuid, details) 
+        VALUES(:team_id, :public_uuid, :details)
+        RETURNING id;
+        '''
+        statement = sqlalchemy.sql.text(sql)
+        res = con.execute(statement, **d).fetchone()
+        logger.info(f'updateJob res {res}...')
+        return res[0]
+
+def addMessage(engine, teamId, targetId, message):
+    with engine.connect() as con:
+        d = { 
+            "target_id": targetId,
+            "team_id": teamId,
+            "details": json.dumps(message),
+        }
+        sql = '''
+        INSERT INTO public.message_queue(target_id, team_id, details) 
+        VALUES(:target_id, :team_id, :public_uuid, :details)
+        RETURNING id;
+        '''
+        statement = sqlalchemy.sql.text(sql)
+        res = con.execute(statement, **d).fetchone()
+        logger.info(f'updateJob res {res}...')
+        return res[0]
+
+def getMessages(engine):
+    with engine.connect() as con:
+        sql = '''
+        DELETE FROM message_queue 
+        WHERE id = (
+        SELECT id
+        FROM message_queue
+        WHERE status = 'new'
+        ORDER BY id ASC 
+        FOR UPDATE SKIP LOCKED
+        LIMIT 1
+        )
+        RETURNING *;
+        '''
+        queueRow = con.execute(sql).fetchone()
+        if queueRow:
+            logger.info(f"message_queue process job id: {queueRow['target_id']}...")
+            sql = '''
+            SELECT * 
+            FROM jobs 
+            WHERE id = %s 
+            AND status = 'pending' 
+            FOR UPDATE;
+            '''
+            jobRow = con.execute(sql, (queueRow['target_id'],)).fetchone()
+            return jobRow, queueRow
+        return False, False

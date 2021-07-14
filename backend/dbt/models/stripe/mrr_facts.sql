@@ -145,6 +145,6 @@ case
 when mrr.mrr_month_dt = max_month.mrr_month_dt then 1
 else 0 end as current_month,
 cume_dist() OVER (PARTITION BY mrr.mrr_month_dt ORDER BY mrr.mrr) as mrr_percentile,
-ntile(10) OVER (PARTITION BY mrr.mrr_month_dt ORDER BY mrr.mrr) as mrr_rank,
+ntile(10) OVER (PARTITION BY mrr.mrr_month_dt ORDER BY mrr.mrr) as mrr_rank
 from mrr4 as mrr left join
 (select max(mrr4.mrr_month_dt) as mrr_month_dt from mrr4) as max_month on mrr.mrr_month_dt = max_month.mrr_month_dt

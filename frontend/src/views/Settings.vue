@@ -1,7 +1,12 @@
 <template>
   <div>
-    <div v-if="!true">
-      Spinning...
+    <div v-if="!storeState.gotUserData">
+      <div class="flex justify-center space-y-8 w-full pt-32">
+        <svg class="animate-spin -ml-1 mr-3 h-20 w-20 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
     </div>
     <div v-else>
       <div class="pt-8 pl-8 mr-8">
@@ -28,17 +33,17 @@
           </div>
           <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 border-b">
             <div class="text-sm font-medium text-gray-500">
-              Weekly
+              Alerts (New Subscribers, Churn, etc.)
             </div>
             <div>
-              <Switch v-model="storeState.settings.notifications.weekly.slack" :class="[storeState.settings.notifications.weekly.slack ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500']">
-                <span :class="[storeState.settings.notifications.weekly.slack ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']">
-                  <span :class="[storeState.settings.notifications.weekly.slack ? 'opacity-0 ease-out duration-100' : 'opacity-100 ease-in duration-200', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
+              <Switch v-model="storeState.user.settings.notifications.alerts.slack" :class="[storeState.user.settings.notifications.alerts.slack ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500']">
+                <span :class="[storeState.user.settings.notifications.alerts.slack ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']">
+                  <span :class="[storeState.user.settings.notifications.alerts.slack ? 'opacity-0 ease-out duration-100' : 'opacity-100 ease-in duration-200', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
                     <svg class="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 12 12">
                       <path d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
                   </span>
-                  <span :class="[storeState.settings.notifications.weekly.slack ? 'opacity-100 ease-in duration-200' : 'opacity-0 ease-out duration-100', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
+                  <span :class="[storeState.user.settings.notifications.alerts.slack ? 'opacity-100 ease-in duration-200' : 'opacity-0 ease-out duration-100', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
                     <svg class="h-3 w-3 text-indigo-600" fill="currentColor" viewBox="0 0 12 12">
                       <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z" />
                     </svg>
@@ -47,14 +52,51 @@
               </Switch>
             </div>
             <div>
-              <Switch v-model="storeState.settings.notifications.weekly.email" :class="[storeState.settings.notifications.weekly.email ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500']">
-                <span :class="[storeState.settings.notifications.weekly.email ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']">
-                  <span :class="[storeState.settings.notifications.weekly.email ? 'opacity-0 ease-out duration-100' : 'opacity-100 ease-in duration-200', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
+              <Switch v-model="storeState.user.settings.notifications.alerts.email" :class="[storeState.user.settings.notifications.alerts.email ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500']">
+                <span :class="[storeState.user.settings.notifications.alerts.email ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']">
+                  <span :class="[storeState.user.settings.notifications.alerts.email ? 'opacity-0 ease-out duration-100' : 'opacity-100 ease-in duration-200', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
                     <svg class="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 12 12">
                       <path d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
                   </span>
-                  <span :class="[storeState.settings.notifications.weekly.email ? 'opacity-100 ease-in duration-200' : 'opacity-0 ease-out duration-100', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
+                  <span :class="[storeState.user.settings.notifications.alerts.email ? 'opacity-100 ease-in duration-200' : 'opacity-0 ease-out duration-100', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
+                    <svg class="h-3 w-3 text-indigo-600" fill="currentColor" viewBox="0 0 12 12">
+                      <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z" />
+                    </svg>
+                  </span>
+                </span>
+              </Switch>
+            </div>
+          </div>
+          <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 border-b">
+            <div class="text-sm font-medium text-gray-500">
+              Weekly
+            </div>
+            <div>
+              <Switch v-model="storeState.user.settings.notifications.weekly.slack" :class="[storeState.user.settings.notifications.weekly.slack ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500']">
+                <span :class="[storeState.user.settings.notifications.weekly.slack ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']">
+                  <span :class="[storeState.user.settings.notifications.weekly.slack ? 'opacity-0 ease-out duration-100' : 'opacity-100 ease-in duration-200', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
+                    <svg class="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 12 12">
+                      <path d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </span>
+                  <span :class="[storeState.user.settings.notifications.weekly.slack ? 'opacity-100 ease-in duration-200' : 'opacity-0 ease-out duration-100', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
+                    <svg class="h-3 w-3 text-indigo-600" fill="currentColor" viewBox="0 0 12 12">
+                      <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z" />
+                    </svg>
+                  </span>
+                </span>
+              </Switch>
+            </div>
+            <div>
+              <Switch v-model="storeState.user.settings.notifications.weekly.email" :class="[storeState.user.settings.notifications.weekly.email ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500']">
+                <span :class="[storeState.user.settings.notifications.weekly.email ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']">
+                  <span :class="[storeState.user.settings.notifications.weekly.email ? 'opacity-0 ease-out duration-100' : 'opacity-100 ease-in duration-200', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
+                    <svg class="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 12 12">
+                      <path d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </span>
+                  <span :class="[storeState.user.settings.notifications.weekly.email ? 'opacity-100 ease-in duration-200' : 'opacity-0 ease-out duration-100', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
                     <svg class="h-3 w-3 text-indigo-600" fill="currentColor" viewBox="0 0 12 12">
                       <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z" />
                     </svg>
@@ -68,14 +110,14 @@
               Monthly
             </div>
             <div>
-              <Switch v-model="storeState.settings.notifications.monthly.slack" :class="[storeState.settings.notifications.monthly.slack ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500']">
-                <span :class="[storeState.settings.notifications.monthly.slack ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']">
-                  <span :class="[storeState.settings.notifications.monthly.slack ? 'opacity-0 ease-out duration-100' : 'opacity-100 ease-in duration-200', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
+              <Switch v-model="storeState.user.settings.notifications.monthly.slack" :class="[storeState.user.settings.notifications.monthly.slack ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500']">
+                <span :class="[storeState.user.settings.notifications.monthly.slack ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']">
+                  <span :class="[storeState.user.settings.notifications.monthly.slack ? 'opacity-0 ease-out duration-100' : 'opacity-100 ease-in duration-200', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
                     <svg class="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 12 12">
                       <path d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
                   </span>
-                  <span :class="[storeState.settings.notifications.monthly.slack ? 'opacity-100 ease-in duration-200' : 'opacity-0 ease-out duration-100', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
+                  <span :class="[storeState.user.settings.notifications.monthly.slack ? 'opacity-100 ease-in duration-200' : 'opacity-0 ease-out duration-100', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
                     <svg class="h-3 w-3 text-indigo-600" fill="currentColor" viewBox="0 0 12 12">
                       <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z" />
                     </svg>
@@ -84,14 +126,14 @@
               </Switch>
             </div>
             <div>
-              <Switch v-model="storeState.settings.notifications.monthly.email" :class="[storeState.settings.notifications.monthly.email ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500']">
-                <span :class="[storeState.settings.notifications.monthly.email ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']">
-                  <span :class="[storeState.settings.notifications.monthly.email ? 'opacity-0 ease-out duration-100' : 'opacity-100 ease-in duration-200', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
+              <Switch v-model="storeState.user.settings.notifications.monthly.email" :class="[storeState.user.settings.notifications.monthly.email ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500']">
+                <span :class="[storeState.user.settings.notifications.monthly.email ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']">
+                  <span :class="[storeState.user.settings.notifications.monthly.email ? 'opacity-0 ease-out duration-100' : 'opacity-100 ease-in duration-200', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
                     <svg class="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 12 12">
                       <path d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
                   </span>
-                  <span :class="[storeState.settings.notifications.monthly.email ? 'opacity-100 ease-in duration-200' : 'opacity-0 ease-out duration-100', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
+                  <span :class="[storeState.user.settings.notifications.monthly.email ? 'opacity-100 ease-in duration-200' : 'opacity-0 ease-out duration-100', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
                     <svg class="h-3 w-3 text-indigo-600" fill="currentColor" viewBox="0 0 12 12">
                       <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z" />
                     </svg>
@@ -1112,71 +1154,25 @@ export default {
     deepCopy(c) {
       return JSON.parse(JSON.stringify(c))
     },
-    getFunded() {
-      this.$router.push({ name: 'Apply', params: { userId: 123 }})
-    },
-    goToFunders() {
-      this.$router.push({ name: 'Login', params: { userId: 123 }})
-    },
-    getRequiredMrr() {
-      return ((this.loan.amount / this.loan.multiple) / 1000).toFixed(0)
-    },
-    setPayoutPeriod(po) {
-      this.loan.payoutPeriod = po
-      this.updatingPayoutPeriod = false
-    },
-    calcLoan() {
-      let month = 0
-      this.loan.months = []
-      this.loan.years = []
-      this.loan.totalPayback = 0
-      this.loan.totalInterest = 0
-      while (this.loan.term > month) {
-        var payback = 0
-        var payout = 0
-        var balance = 0
-        // payout = this.loan.amount / this.loan.payoutPeriod.months
-        if (month <= this.loan.payoutPeriod.months - 1) {
-          payout = this.loan.amount / this.loan.payoutPeriod.months
-        }
-        if (month == 0) {
-          balance = payout
-        } else {
-          let prevMonth = this.loan.months[month-1]
-          balance = payout + prevMonth.interest + prevMonth.balance
-        }
-        let interest = balance * (this.loan.rate / 12)
-        
-        if (month > 23) { //start paying back
-          let mo23Bal = this.loan.months[22].balance
-          let prevMonth = this.loan.months[month-1]
-          payback = (mo23Bal / 12) + prevMonth.interest + prevMonth.payout
-        } else if (month > 11) { //start paying interest
-          payback = this.loan.months[month-1].interest
-        }
-        balance = balance - payback
-        this.loan.totalPayback+=payback
-        this.loan.totalInterest+=interest
-        let m = {
-          month: month,
-          payback: payback,
-          payout: payout,
-          balance: balance,
-          interest: interest
-        }
-        this.loan.months.push(m)
-        if (Object.keys(this.yearLookup).includes(String(month))) {
-          m.label = this.yearLookup[month]
-          this.loan.years.push(m)
-        }
-        month+=1
-      }
-    },
-    formatMoney(m) {
-      return (m / 1000).toFixed(1)
-    },
+    updateSettings() {
+      const path = this.getApiUrl('update_settings')
+      let d = {user: this.storeState.user}
+      axios.post(path, d)
+        .then((res) => {
+          console.log('update_settings: ', res.data)
+        })
+        .catch((error) => {
+          console.error('update_settings: ', error)
+        })
+    }
   },
   watch: {
+    'storeState.user.settings.notifications': {
+        handler: function () {
+          if (this.storeState.gotUserData) this.updateSettings()
+        },
+        deep: true
+    },
   },
 }
 /* eslint-disable no-unused-vars */

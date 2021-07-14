@@ -305,6 +305,9 @@ export default {
   },
   mounted() {
     this.checkIfLoggedIn()
+    this.emitter.on('check-login', d => {
+      this.checkIfLoggedIn()
+    });
   },
   computed: {
   },

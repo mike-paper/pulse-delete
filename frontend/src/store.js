@@ -12,18 +12,22 @@ export const store = {
         oauth: false,
         hasStripe: false
       },
-      settings: {
-        notifications: {
-          weekly: {
-            slack: false,
-            email: true,
-          },
-          monthly: {
-            slack: true,
-            email: true,
-          },
-        }
-      },
+      // settings: {
+      //   notifications: {
+      //     alerts: {
+      //       slack: true,
+      //       email: false,
+      //     },
+      //     weekly: {
+      //       slack: true,
+      //       email: true,
+      //     },
+      //     monthly: {
+      //       slack: true,
+      //       email: true,
+      //     },
+      //   }
+      // },
       dbt: {},
       jobStatuses: {},
       analysis: {

@@ -24,9 +24,23 @@ import subprocess
 # chromedriver
 # driver = webdriver.Chrome('/chromedriver/chromedriver')
 
-import pints
+
 from logger import logger
 from metrics import metrics
+
+SQLALCHEMY_DATABASE_URI = os.environ.get('PAPER_SQLALCHEMY_DATABASE_URI')
+SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+app = Flask(__name__)
+app.config.from_object(__name__)
+
+CORS(app)
+
+db = SQLAlchemy(app)
+
+import pints
+
+pints.scheduler.startScheduler(db.engine)
 
 def getTeamDomain(email):
     return email.split('@')[1]
@@ -53,16 +67,6 @@ def checkForTeam(engine, email, userId):
         teamMembershipId = pints.postgres.insertTeamMember(engine, teamId, userId)
         logger.info(f'adding user to team {teamId}...')
     return True
-
-SQLALCHEMY_DATABASE_URI = os.environ.get('PAPER_SQLALCHEMY_DATABASE_URI')
-SQLALCHEMY_TRACK_MODIFICATIONS = False
-
-app = Flask(__name__)
-app.config.from_object(__name__)
-
-CORS(app)
-
-db = SQLAlchemy(app)
 
 # with app.app_context():
 # scs = pints.stripe.getCustomers(db.engine, 3)
@@ -102,7 +106,7 @@ def get_stripe():
 @app.route('/get_dbt', methods=["GET", "POST"])
 def get_dbt():
     data = flask.request.get_json()
-    logger.info(f'handle_app_submission: {data}')
+    logger.info(f'get_dbt: {data}')
     user = getUser(data)
     d = pints.modeling.getDbt()
     return json.dumps({'ok' : True, 'data': d}), 200, {'ContentType':'application/json'}
@@ -199,6 +203,15 @@ def getUser(data):
         return json.loads(df.to_json(orient='records'))[0]
 
 
+@app.route('/update_settings', methods=["GET", "POST"])
+def update_settings():
+    data = flask.request.get_json()
+    logger.info(f"update_settings: {data}")
+    user = getUser(data)
+    pints.postgres.updateSettings(db.engine, user['team_id'], data['user']['settings'])
+    ret = {'ok': True}
+    return json.dumps(ret), 200, {'ContentType':'application/json'} 
+
 @app.route('/update_secret', methods=["GET", "POST"])
 def update_secret():
     data = flask.request.get_json()
@@ -253,23 +266,27 @@ def login():
     u.id as user_id, 
     u.email, 
     u.details,
+    t.details as settings,
     case when s.details ->> 'stripeApiKey' is not null then 1 else 0 end as has_stripe
     FROM 
     public.users as u left join
     public.team_membership as tm on u.id = tm.user_id left join
+    public.teams as t on tm.team_id = t.id left join
     public.secrets as s on tm.team_id = s.team_id
     WHERE 
     u.details ->> 'publicAddress' = '{publicAddress}'
     order by u.created_on desc
+    limit 1
     '''.format(publicAddress = publicAddress)
     df = pd.read_sql(sql, db.engine)
     if len(df) > 0:
         user = df.details[0]
+        user['settings'] = df.settings[0]
         user['hasStripe'] = bool(df.has_stripe[0] > 0)
         d = {
             'ok': True,
             'new': False,
-            'user': user,
+            'user': user
         }
     else:
         userId = pints.postgres.insertUser(db.engine, email, data)
@@ -367,22 +384,6 @@ def update_user_data():
 #     updated_on timestamp DEFAULT current_timestamp,
 #     details JSONB
 # );
-
-@app.route('/handle_app_submission', methods=["GET", "POST"])
-def handle_app_submission():
-    data = flask.request.get_json()
-    logger.info(f'handle_app_submission: {data}')
-    user = getUser(data)
-    appId = uuid.uuid4().hex
-    with db.engine.connect() as con:
-        d = { "appId": appId, "details": json.dumps(data['application']), "userId": user['user_id'] }
-        sql = '''
-        INSERT INTO applications(public_uuid, user_id, details) 
-        VALUES(:appId, :userId, :details)
-        '''
-        statement = sqlalchemy.sql.text(sql)
-        con.execute(statement, **d)
-    return json.dumps({'ok' : True, 'appId': appId}), 200, {'ContentType':'application/json'}
 
 @app.route('/get_metrics', methods=["GET", "POST"])
 def get_metrics():

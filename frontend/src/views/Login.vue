@@ -259,60 +259,9 @@ export default {
           } else if (res.data.new || (res.data.user && !res.data.user.hasStripe)) {
             this.$router.push({ name: 'Settings', params: { user: userMetadata }})
           } else {
+            this.emitter.emit('check-login');
             this.$router.push({ name: 'Metrics', params: { user: userMetadata }})
           }
-        })
-        .catch((error) => {
-          console.error(error)
-        })
-    },
-    getFunders() {
-      this.gotFunders = false
-      const path = this.getApiUrl('get_funders')
-      let d = {}
-      axios.post(path, d)
-        .then((res) => {
-          console.log('got handle_app_submission: ', res.data)
-          this.gotFunders = true
-          // this.funderColumns = Object.keys(res.data.columns).filter(c => !['domain', 'data'].includes(c))
-          this.funderData = res.data.data
-          this.filteredFunders = this.funderData
-          // new Grid({
-          //   sort: true,
-          //   search: true,
-            // columns: ["Name", "Email", "Phone Number"],
-            // data: res.data.data
-            // className: {
-            //   td: 'px-6 py-4 whitespace-nowrap text-sm text-gray-900 divide-y divide-gray-200',
-            //   th: 'px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider',
-            //   table: 'min-w-full divide-gray-200',
-            //   tbody: 'bg-white '
-            // }
-          // }).render(document.getElementById("wrapper"));
-        })
-        .catch((error) => {
-          console.error(error)
-        })
-    },
-    saveFunder(row) {
-      row
-    },
-    applyToFunder(row) {
-      let url = `http://${row.domain}/?ref=trypaperio`
-      window.open(url, '_blank');
-    },
-    submitApp() {
-      if (!this.appReady) {
-        let field = 'email'
-        this.appError = `${field} is required.`
-        return
-      }
-      this.submitted = true
-      const path = this.getApiUrl('handle_app_submission')
-      let d = {application: this.loan, sessionId: ''}
-      axios.post(path, d)
-        .then((res) => {
-          console.log('got handle_app_submission: ', res.data)
         })
         .catch((error) => {
           console.error(error)
