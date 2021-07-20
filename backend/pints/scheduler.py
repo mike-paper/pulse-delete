@@ -9,6 +9,7 @@ import uuid
 from app import app, db
 
 
+
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
@@ -17,6 +18,7 @@ from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
 def startScheduler(engine):
     scheduler = False
     apses = pints.postgres.getSchedulerRow(engine)
+    logger.info(f'apses... {apses}')
     if apses:
         pints.postgres.truncateTable(engine, 'aps_scheduler')
     logger.info(f'starting aps...')
@@ -34,8 +36,9 @@ def startScheduler(engine):
     }
     scheduler = BackgroundScheduler(jobstores=jobstores, executors=executors, job_defaults=job_defaults, timezone=pytz.utc)
     checkQueueJob = scheduler.add_job(checkQueue, trigger='interval', seconds=60)
-    # hourlyJob = scheduler.add_job(func=runHourly, trigger='cron', minute=16, second=0)
-    hourlyJob = scheduler.add_job(runHourly, trigger='interval', seconds=10)
+    # checkQueueJob = scheduler.add_job(testSched, trigger='interval', seconds=10)
+    hourlyJob = scheduler.add_job(func=runHourly, trigger='cron', minute=19, second=20)
+    # hourlyJob = scheduler.add_job(runHourly, trigger='interval', seconds=10)
     # weeklyJob = scheduler.add_job(func=runWeekly, kwargs={'engine': engine}, trigger='cron', day_of_week='mon', hour=8, minute=30, second=0)
     # monthlyJob = scheduler.add_job(func=runMonthly, kwargs={'engine': engine}, trigger='cron', day=1, hour=8, minute=30, second=0)
     scheduler.start()
@@ -44,7 +47,9 @@ def runHourly():
     logger.info(f'runHourly...')
     with app.app_context():
         teams = pints.postgres.getTeams(db.engine)
+        # teams = [team for team in teams if team['id'] == 4]
         for team in teams:
+            logger.info(f"team {team['id']}...")
             settings = pints.postgres.getSettings(db.engine, team['id'])
             jobUuids = fullRefresh(db.engine, team['id'])
             details = {
@@ -54,7 +59,7 @@ def runHourly():
             }
             jobUuid = uuid.uuid4().hex
             targetId = pints.postgres.addJob(db.engine, team['id'], details, jobUuid)
-            messageId = pints.postgres.addMessage(db.engine, team['id'], targetId, details)
+            messageId = pints.postgres.addMessage(db.engine, team['id'], targetId, details, jobUuid)
             logger.info(f'runHourly messageId... {messageId}')
             # TODO check if alert / notifications need to be sent
         return True
@@ -77,48 +82,6 @@ def fullRefresh(engine, teamId):
     jobUuids = pints.stripe.getAll(engine, teamId)
     logger.info(f'fullRefresh jobUuids: {jobUuids}')
     return jobUuids
-
-# def runScheduledJobs(engine, teamId):
-#     dt = datetime.datetime.utcnow()
-#     schedule = False
-#     lastRunDt = False
-#     daysSinceLastRun = 0
-#     destinations = []
-#     if dt.day == 1:
-#         schedule = 'monthly'
-#     elif dt.weekday() == 0:
-#         schedule = 'weekly'
-#     if schedule:
-#         lastRunDt = pints.postgres.getMaxJobRun(engine, teamId, schedule)
-#         logger.info(f'lastRunDt: {lastRunDt}')
-#     if lastRunDt:
-#         daysSinceLastRun = (dt - lastRunDt).days
-#     if daysSinceLastRun > 0:
-#         settings = pints.postgres.getSettings(engine, teamId)
-#         if settings:
-#             for key, value in settings['notifications'][schedule].items():
-#                 if value:
-#                     destinations.append(key)
-#     for destination in destinations:
-#         logger.info(f'destination: {destination}')
-#         message = {
-#             'type': destination,
-#             'schedule': schedule
-#             }
-#         jobUuid = uuid.uuid4().hex
-#         targetId = pints.postgres.addJob(engine, teamId, message, jobUuid)
-#         pints.postgres.addMessage(engine, teamId, targetId, message)
-        # TODO run destination
-
-def getScheduledJobs(schedule):
-    # TODO get time
-    # run stripe
-    # run dbt
-    # run alerts
-    # get time
-    # if time is on the weekly run, run weekly
-    # if time is on the monthly run, run monthly
-    return
     
 def do_some_work(jobRow):
     logger.info(f'do_some_work... {jobRow}')
@@ -128,18 +91,54 @@ def do_some_work(jobRow):
     else:
         logger.info(f'do_some_work SUCCESS... {jobRow}')
 
+def testSched():
+    # print('testSched...')
+    team = {'id': 5, 'domain': 'trypaper.io'} # trypaper.io team
+    logger.info(f'testSched...')
+    depJob = uuid.uuid4().hex
+    details = {
+        'status': 'complete',
+        'dependencies': [],
+        'type': 'stripe'
+    }
+    depJob = uuid.uuid4().hex
+    pints.postgres.addJob(db.engine, team['id'], details, depJob)
+    details = {
+        'status': 'pending',
+        'dependencies': [depJob],
+        'type': 'sendNotifications'
+    }
+    jobUuid = uuid.uuid4().hex
+    targetId = pints.postgres.addJob(db.engine, team['id'], details, jobUuid)
+    messageId = pints.postgres.addMessage(db.engine, team['id'], targetId, details, jobUuid)
+    logger.info(f'testSched... {targetId} {jobUuid}')
+    return True
+
 def checkQueue():
     logger.info(f'checkQueue...')
-    jobRow, queueRow = pints.postgres.getMessages(db.engine)
-    logger.info(f'checkQueue jobRow: {jobRow}')
-    if jobRow:
-        try:
-            do_some_work(jobRow)
-            pints.postgres.updateJobStatus(db.engine, queueRow['target_id'], 'complete', None)
-        except Exception as e:
-            pints.postgres.updateJobStatus(db.engine, queueRow['target_id'], 'failed', str(e))
-            # if we want the job to run again, insert a new item to the message queue with this job id
-            # con.execute(sql, (queue_item['target_id'],))
-    else:
-        logger.info(f'no jobs to run...')
-    return True
+    gettingJobs = True
+    while gettingJobs:
+        jobRow, queueRow = pints.postgres.getMessages(db.engine)
+        if jobRow:
+            logger.info(f"checkQueue jobRow: {jobRow}")
+            try:
+                if jobRow['details']['type'] == 'sendNotifications':
+                    logger.info(f'sendNotifications...')
+                    d = {
+                        'name': 'John Doe',
+                        'email': 'jame@doordash.com',
+                        'mrr': '$100.00',
+                        'msg': 'Thanks for the $100.00'
+                    }
+                    pints.slack.newCustomer(d)
+                pints.postgres.updateJobStatus(db.engine, queueRow['target_id'], 'complete', None)
+            except Exception as e:
+                logger.error(f'checkQueue error: {str(e)}')
+                pints.postgres.updateJobStatus(db.engine, queueRow['target_id'], 'error', str(e))
+                # raise e
+                # if we want the job to run again, insert a new item to the message queue with this job id
+                # con.execute(sql, (queue_item['target_id'],))
+        else:
+            logger.info(f'no jobs to run...')
+            gettingJobs = False
+        return True

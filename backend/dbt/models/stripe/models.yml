@@ -11,25 +11,6 @@ models:
       joins:
         - join: customers
           sql_on: mrr_facts.email = customers.email
-      # measures:
-      #   total:
-      #     aggregation: count
-      #     label: Count
-      #   customers:
-      #     sql: count(distinct(email))
-      #     label: Customers
-      #   mrr:
-      #     aggregation: sum
-      #     label: MRR
-      #   churned_mrr:
-      #     aggregation: sum
-      #     label: Churn
-      #   expansion_mrr:
-      #     aggregation: sum
-      #     label: Expansion
-      #   new_mrr:
-      #     aggregation: sum
-      #     label: New MRR
     columns:
       - name: email
         description: Billing email for customer (get from Invoice if possible)
@@ -78,36 +59,6 @@ models:
             churned_mrr_sum:
               label: Churned MRR
               type: sum
-    # - name: plans
-  #   description: > 
-  #     Plans https://stripe.com/docs/api/plans
-  #   docs:
-  #     show: true
-  #   columns:
-  #     - name: plan_id
-  #       description: Plan ID
-  #       meta:
-  #         dimension:
-  #           label: Plan ID
-  #         measures:
-  #           plans:
-  #             label: Plans
-  #             type: count
-  #     - name: name
-  #       description: Name
-  #       meta:
-  #         dimension:
-  #           label: Name
-  #         measures:
-  #           customers:
-  #             label: Customers
-  #             type: count
-  #     - name: created_on
-  #       description: Plan created on
-  #       meta:
-  #         dimension:
-  #           label: Created On
-  #           timeframes: [week, month, year]
   - name: customers
     description: > 
       Customers https://stripe.com/docs/api/customers
@@ -142,3 +93,33 @@ models:
           dimension:
             label: Customer Start Date
             timeframes: [week, month, year]
+    # - name: plans
+  #   description: > 
+  #     Plans https://stripe.com/docs/api/plans
+  #   docs:
+  #     show: true
+  #   columns:
+  #     - name: plan_id
+  #       description: Plan ID
+  #       meta:
+  #         dimension:
+  #           label: Plan ID
+  #         measures:
+  #           plans:
+  #             label: Plans
+  #             type: count
+  #     - name: name
+  #       description: Name
+  #       meta:
+  #         dimension:
+  #           label: Name
+  #         measures:
+  #           customers:
+  #             label: Customers
+  #             type: count
+  #     - name: created_on
+  #       description: Plan created on
+  #       meta:
+  #         dimension:
+  #           label: Created On
+  #           timeframes: [week, month, year]

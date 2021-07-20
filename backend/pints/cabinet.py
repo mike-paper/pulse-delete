@@ -8,9 +8,8 @@ PAPER_STORAGE_CONTAINER = os.environ.get('PAPER_STORAGE_CONTAINER', 'paper-metri
 if AWS_ACCESS_KEY_ID:
     storage = S3Driver(key=AWS_ACCESS_KEY_ID, secret=AWS_SECRET_ACCESS_KEY)
 
-container = storage.get_container('paper-metrics')
-
 def file(filename):
+    container = storage.get_container('paper-metrics')
     blob = container.upload_blob(filename, acl='public-read')
     url = blob.generate_download_url()
     if '?' in url:

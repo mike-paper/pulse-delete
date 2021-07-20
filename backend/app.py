@@ -29,6 +29,7 @@ from logger import logger
 from metrics import metrics
 
 SQLALCHEMY_DATABASE_URI = os.environ.get('PAPER_SQLALCHEMY_DATABASE_URI')
+# SQLALCHEMY_ECHO = True
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 app = Flask(__name__)
@@ -36,7 +37,10 @@ app.config.from_object(__name__)
 
 CORS(app)
 
-db = SQLAlchemy(app)
+session_options = {
+    'autocommit': True
+}
+db = SQLAlchemy(app, session_options=session_options)
 
 import pints
 
@@ -89,6 +93,7 @@ def checkForTeam(engine, email, userId):
 # testStripe = pints.stripe.getObject(db.engine, 1, 'coupons')
 # testStripe = pints.stripe.getObject(db.engine, 1, 'invoices')
 # testStripe = pints.stripe.getAll(db.engine, 4)
+# testStripe = pints.scheduler.testSched()
 
 @app.route('/ping', methods=["GET"])
 def ping():
@@ -232,12 +237,15 @@ def get_recent_jobs():
     data = flask.request.get_json()
     user = getUser(data)
     jobs = pints.postgres.getRecentJobs(db.engine, user['team_id'])
-    logger.info(f'jobs: {jobs}')
     for key, job in jobs.items():
-        logger.info(f'job: {job}')
-        job['job']['count'] = pints.postgres.getRawTableCount(db.engine, 
-            user['team_id'], job['job']['obj'])
-        jobs[key] = job['job']
+        logger.info(f'get_recent_jobs job: {job}')
+        logger.info(f'get_recent_jobs job: {key}')
+        if 'job' in job and 'obj' in job['job']:
+            job['jobId'] = str(key)
+            logger.info(f'job: {job}')
+            job['job']['count'] = pints.postgres.getRawTableCount(db.engine, 
+                user['team_id'], job['job']['obj'])
+            jobs[key] = job['job']
     return json.dumps({'ok': True, 'jobs': jobs}), 200, {'ContentType':'application/json'}
 
 @app.route('/get_job', methods=["GET", "POST"])
@@ -411,7 +419,11 @@ def get_metrics():
     toSlack['mrrChartUrl'] = pints.cabinet.file(chart['filename'])
     chart = metrics.getCustomerChart(df)
     toSlack['customerChartUrl'] = pints.cabinet.file(chart['filename'])
-    toSlack['summary'] = metrics.getSummary(summary)
+    try:
+        toSlack['summary'] = metrics.getSummary(summary)
+    except Exception as e:
+        logger.error(f"error getting summary: {str(e)}")
+        toSlack['summary'] = False
     # logger.info(f'chart: {chart}')
     # app.wsgi_app.add_files('static/', prefix='assets/')
     # chart['title'] = 'MRR'

@@ -25,8 +25,6 @@ from logger import logger
 
 longrun = concurrent.futures.ThreadPoolExecutor(max_workers=None)
 
-# stripe.api_key = STRIPE_API_KEY
-
 objs = {
     'coupons': {
         'api': stripe.Coupon,
@@ -36,11 +34,11 @@ objs = {
         'api': stripe.Customer,
         'expand': []
     },
-    # 'subscriptions': {
-    #     'api': stripe.Subscription,
-    #     'expand': [],
-    #     'all': True,
-    # },
+    'subscriptions': {
+        'api': stripe.Subscription,
+        'expand': [],
+        'all': True,
+    },
     'plans': {
         'api': stripe.Plan,
         'expand': []

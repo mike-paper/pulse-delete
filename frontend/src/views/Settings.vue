@@ -223,37 +223,39 @@
                     v-for="(job, jobId, jobIndex) in storeState.jobStatuses"
                     :key="jobIndex"
                   >
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <div class="flex items-center">
-                        <div class="ml-0">
-                          <div class="text-sm font-medium text-gray-900">
-                            {{ job.obj }}
+                    <template v-if="job.count">
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                          <div class="ml-0">
+                            <div class="text-sm font-medium text-gray-900">
+                              {{ job.obj }}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <span v-if="job.status === 'running'" class="px-2 -ml-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                        {{ job.status }}
-                      </span>
-                      <span v-else class="px-2 -ml-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                        {{ job.status }}
-                      </span>
-                      <div v-if="job.status === 'running'" class="whitespace-nowrap text-sm text-gray-500">
-                        ...
-                      </div>
-                      <div v-else class="whitespace-nowrap text-sm text-gray-500">
-                        Updated {{ job.rows }} rows 
-                        <span v-if="job.updated_on">
-                          {{ timeSince(job.updated_on*1000) }} ago
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <span v-if="job.status === 'running'" class="px-2 -ml-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                          {{ job.status }}
                         </span>
+                        <span v-else class="px-2 -ml-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                          {{ job.status }}
+                        </span>
+                        <div v-if="job.status === 'running'" class="whitespace-nowrap text-sm text-gray-500">
+                          ...
+                        </div>
+                        <div v-else class="whitespace-nowrap text-sm text-gray-500">
+                          Updated {{ job.rows }} rows 
+                          <span v-if="job.updated_on">
+                            {{ timeSince(job.updated_on*1000) }} ago
+                          </span>
+                          
+                        </div>
                         
-                      </div>
-                      
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {{ job.count }}
-                    </td>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ job.count }}
+                      </td>
+                    </template>
                   </tr>
                 </tbody>
               </table>
@@ -338,13 +340,13 @@
             Sheets
           </div>
           <p class="max-w-2xl text-sm text-gray-500">
-            Get your SaaS metrics in Google Sheets (
+            Get your SaaS metrics in Google Sheets
               <a 
                 href="https://developers.google.com/sheets/api/guides/authorizing#APIKey"
                 class="font-medium text-indigo-600 hover:text-indigo-500"
                 target="_blank"
               >
-                see here to get a key
+              (see here to get a key)
               </a>
           </p>
           <div 
@@ -1156,6 +1158,7 @@ export default {
     },
     updateSettings() {
       const path = this.getApiUrl('update_settings')
+      if (!this.storeState.user.settings) return
       let d = {user: this.storeState.user}
       axios.post(path, d)
         .then((res) => {

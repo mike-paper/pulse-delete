@@ -376,7 +376,7 @@ def updateJob(engine, teamId, jobId, jobUuid, details):
             '''
             statement = sqlalchemy.sql.text(sql)
             res = con.execute(statement, **d).fetchone()
-            logger.info(f'updateJob res {res}...')
+            logger.info(f'updateJob INSERT {res}...')
             return res[0]
 
 def updateJobStatus(engine, jobId, status, error=None):
@@ -389,14 +389,21 @@ def updateJobStatus(engine, jobId, status, error=None):
         sql = '''
         UPDATE jobs 
         SET status = :status,
-        details = jsonb_set(details, '{{status}}', :status::jsonb),
-        details = jsonb_set(details, '{{error}}', :error::jsonb),
+        details = jsonb_set(details, '{status}', to_jsonb((:status)::text))
         where id = :jobId;
         '''
         statement = sqlalchemy.sql.text(sql)
-        res = con.execute(statement, **d).fetchone()
-        logger.info(f'updateJob res {res}...')
-        return res[0]
+        res = con.execute(statement, **d)
+        if error:
+            sql = '''
+            UPDATE jobs 
+            SET details = jsonb_set(details, '{error}', to_jsonb((:error)::text))
+            where id = :jobId;
+            '''
+            statement = sqlalchemy.sql.text(sql)
+            res = con.execute(statement, **d)
+        logger.info(f'updated job id {jobId}...')
+        return True
 
 def getJob(engine, jobUuid):
     with engine.connect() as con:
@@ -424,8 +431,8 @@ def addJob(engine, teamId, details, jobUuid):
             "public_uuid": jobUuid
             }
         sql = '''
-        INSERT INTO public.jobs(team_id, public_uuid, details) 
-        VALUES(:team_id, :public_uuid, :details)
+        INSERT INTO public.jobs(team_id, public_uuid, status, details) 
+        VALUES(:team_id, :public_uuid, :status, :details)
         RETURNING id;
         '''
         statement = sqlalchemy.sql.text(sql)
@@ -433,15 +440,16 @@ def addJob(engine, teamId, details, jobUuid):
         logger.info(f'updateJob res {res}...')
         return res[0]
 
-def addMessage(engine, teamId, targetId, message):
+def addMessage(engine, teamId, targetId, message, jobUuid):
     with engine.connect() as con:
         d = { 
             "target_id": targetId,
             "team_id": teamId,
             "details": json.dumps(message),
+            "public_uuid": jobUuid
         }
         sql = '''
-        INSERT INTO public.message_queue(target_id, team_id, details) 
+        INSERT INTO public.message_queue(target_id, team_id, public_uuid, details) 
         VALUES(:target_id, :team_id, :public_uuid, :details)
         RETURNING id;
         '''
@@ -452,28 +460,63 @@ def addMessage(engine, teamId, targetId, message):
 
 def getMessages(engine):
     with engine.connect() as con:
+        trans = con.begin()
         sql = '''
-        DELETE FROM message_queue 
+        with q as (
+            select 
+            jsonb_array_elements_text(mq.details -> 'dependencies')::text as dependency, 
+            mq.target_id,
+            mq.id
+            from public.message_queue as mq 
+            where 1=1
+        ), c as (
+            select j.public_uuid::text
+            from public.jobs as j
+            where j.status = 'complete'
+        ), q2 as (
+            select 
+            q.dependency, 
+            q.target_id,
+            q.id,
+            case when c.public_uuid is not null then 1 else 0 end as complete
+            from
+            q left join  
+            c as c on q.dependency = c.public_uuid
+        ), q3 as (
+            select 
+            id,
+            count(1) as jobs, 
+            sum(complete) as complete
+            from q2
+            group by 1
+            having 
+            count(1) = sum(complete)
+        )
+
+        DELETE FROM public.message_queue 
         WHERE id = (
-        SELECT id
-        FROM message_queue
-        WHERE status = 'new'
-        ORDER BY id ASC 
+        SELECT mq.id
+        FROM public.message_queue as mq inner join
+        q3 on mq.id = q3.id
+        ORDER BY mq.id ASC 
         FOR UPDATE SKIP LOCKED
         LIMIT 1
         )
         RETURNING *;
         '''
         queueRow = con.execute(sql).fetchone()
+        trans.commit()
         if queueRow:
-            logger.info(f"message_queue process job id: {queueRow['target_id']}...")
+            logger.info(f"message_queue process queue id: {queueRow['id']} and target_id: {queueRow['target_id']}...")
             sql = '''
             SELECT * 
-            FROM jobs 
-            WHERE id = %s 
-            AND status = 'pending' 
+            FROM public.jobs as j
+            WHERE j.id = %s 
+            AND j.status = 'pending' 
             FOR UPDATE;
             '''
             jobRow = con.execute(sql, (queueRow['target_id'],)).fetchone()
-            return jobRow, queueRow
+            if jobRow:
+                logger.info(f"jobRow id: {jobRow['id']}...")
+                return jobRow, queueRow
         return False, False

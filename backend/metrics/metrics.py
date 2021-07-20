@@ -3,6 +3,7 @@ import uuid
 import altair
 import altair_saver
 import datetime
+from logger import logger
 
 from selenium import webdriver
 chrome_options = webdriver.ChromeOptions()
@@ -86,6 +87,7 @@ def getCustomerChart(d):
     return {'ok': True, 'chartId': chartId, 'filename': filename}
 
 def getSummary(last3):
+    logger.info(f'getSummary... {last3}')
     summary = {}
     dt = datetime.datetime.utcnow()
     curr = last3[2]
