@@ -9,8 +9,8 @@ import uuid
 from app import app, db
 
 
-
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
 
@@ -31,17 +31,25 @@ def startScheduler(engine):
     }
     job_defaults = {
         'coalesce': False,
-        'max_instances': 1,
+        'max_instances': 3,
         'misfire_grace_time': 60
     }
-    scheduler = BackgroundScheduler(jobstores=jobstores, executors=executors, job_defaults=job_defaults, timezone=pytz.utc)
-    checkQueueJob = scheduler.add_job(checkQueue, trigger='interval', seconds=60)
-    # checkQueueJob = scheduler.add_job(testSched, trigger='interval', seconds=10)
-    hourlyJob = scheduler.add_job(func=runHourly, trigger='cron', minute=19, second=20)
+    scheduler = BackgroundScheduler(
+        # daemon=True, 
+        jobstores=jobstores, 
+        executors=executors, 
+        job_defaults=job_defaults, 
+        timezone=pytz.utc
+        )
+    scheduler.start()
+    checkQueueJob = scheduler.add_job(checkQueue, trigger='interval', seconds=10)
+    # testSchedJob = scheduler.add_job(testSched, trigger='interval', seconds=10)
+    hourlyJob = scheduler.add_job(func=runHourly, trigger='cron', minute=13, second=30)
     # hourlyJob = scheduler.add_job(runHourly, trigger='interval', seconds=10)
     # weeklyJob = scheduler.add_job(func=runWeekly, kwargs={'engine': engine}, trigger='cron', day_of_week='mon', hour=8, minute=30, second=0)
     # monthlyJob = scheduler.add_job(func=runMonthly, kwargs={'engine': engine}, trigger='cron', day=1, hour=8, minute=30, second=0)
-    scheduler.start()
+    
+    
 
 def runHourly():
     logger.info(f'runHourly...')
@@ -51,11 +59,16 @@ def runHourly():
         for team in teams:
             logger.info(f"team {team['id']}...")
             settings = pints.postgres.getSettings(db.engine, team['id'])
+            # TODO if settings has notifications turned on, check for new customers
+            # since last job run
             jobUuids = fullRefresh(db.engine, team['id'])
+            dt = datetime.datetime.utcnow().isoformat().replace('T', ' ')
             details = {
                 'status': 'pending',
                 'dependencies': jobUuids,
-                'type': 'sendNotifications'
+                'type': 'sendNotifications',
+                'maxCreatedOn': dt,
+                'maxCanceledOn': dt,
             }
             jobUuid = uuid.uuid4().hex
             targetId = pints.postgres.addJob(db.engine, team['id'], details, jobUuid)
@@ -92,26 +105,7 @@ def do_some_work(jobRow):
         logger.info(f'do_some_work SUCCESS... {jobRow}')
 
 def testSched():
-    # print('testSched...')
-    team = {'id': 5, 'domain': 'trypaper.io'} # trypaper.io team
     logger.info(f'testSched...')
-    depJob = uuid.uuid4().hex
-    details = {
-        'status': 'complete',
-        'dependencies': [],
-        'type': 'stripe'
-    }
-    depJob = uuid.uuid4().hex
-    pints.postgres.addJob(db.engine, team['id'], details, depJob)
-    details = {
-        'status': 'pending',
-        'dependencies': [depJob],
-        'type': 'sendNotifications'
-    }
-    jobUuid = uuid.uuid4().hex
-    targetId = pints.postgres.addJob(db.engine, team['id'], details, jobUuid)
-    messageId = pints.postgres.addMessage(db.engine, team['id'], targetId, details, jobUuid)
-    logger.info(f'testSched... {targetId} {jobUuid}')
     return True
 
 def checkQueue():
@@ -124,18 +118,37 @@ def checkQueue():
             try:
                 if jobRow['details']['type'] == 'sendNotifications':
                     logger.info(f'sendNotifications...')
+                    lastJob = pints.postgres.getLastJob(db.engine, jobRow['team_id'], 'sendNotifications')
+                    if not lastJob:
+                        dt = datetime.datetime.utcnow().isoformat().replace('T', ' ')
+                        details = {
+                            'maxCreatedOn': dt,
+                            'maxCanceledOn': dt,
+                            'type': 'sendNotifications',
+                            'status': 'complete',
+                        }
+                        jobUuid = uuid.uuid4().hex
+                        pints.postgres.addJob(db.engine, jobRow['team_id'], details, jobUuid)
+                        lastJob = pints.postgres.getLastJob(db.engine, jobRow['team_id'], 'sendNotifications')
+                    logger.info(f'sendNotifications lastJob: {lastJob}')
+                    alerts = pints.postgres.getAlerts(db.engine, jobRow['team_id'], lastJob)
                     d = {
                         'name': 'John Doe',
-                        'email': 'jame@doordash.com',
-                        'mrr': '$100.00',
+                        'email': alerts['email'],
+                        'mrr': alerts['mrr'],
                         'msg': 'Thanks for the $100.00'
                     }
                     pints.slack.newCustomer(d)
-                pints.postgres.updateJobStatus(db.engine, queueRow['target_id'], 'complete', None)
+                    dt = datetime.datetime.utcnow().isoformat().replace('T', ' ')
+                    details = {
+                        'maxCreatedOn': dt,
+                        'maxCanceledOn': dt,
+                    }
+                    pints.postgres.updateJobStatus(db.engine, queueRow['target_id'], 'complete', None, details)
             except Exception as e:
                 logger.error(f'checkQueue error: {str(e)}')
-                pints.postgres.updateJobStatus(db.engine, queueRow['target_id'], 'error', str(e))
-                # raise e
+                pints.postgres.updateJobStatus(db.engine, queueRow['target_id'], 'error', str(e), None)
+                raise e
                 # if we want the job to run again, insert a new item to the message queue with this job id
                 # con.execute(sql, (queue_item['target_id'],))
         else:

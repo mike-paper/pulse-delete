@@ -379,7 +379,7 @@ def updateJob(engine, teamId, jobId, jobUuid, details):
             logger.info(f'updateJob INSERT {res}...')
             return res[0]
 
-def updateJobStatus(engine, jobId, status, error=None):
+def updateJobStatus(engine, jobId, status, error=None, maxId=None):
     with engine.connect() as con:
         d = { 
             "jobId": jobId,
@@ -398,6 +398,14 @@ def updateJobStatus(engine, jobId, status, error=None):
             sql = '''
             UPDATE jobs 
             SET details = jsonb_set(details, '{error}', to_jsonb((:error)::text))
+            where id = :jobId;
+            '''
+            statement = sqlalchemy.sql.text(sql)
+            res = con.execute(statement, **d)
+        if maxId:
+            sql = '''
+            UPDATE jobs 
+            SET details = jsonb_set(details, '{maxId}', to_jsonb((:maxId)::int))
             where id = :jobId;
             '''
             statement = sqlalchemy.sql.text(sql)
@@ -422,6 +430,20 @@ def getJob(engine, jobUuid):
         ret['updated_on'] = res[1].timestamp()
         return {'ok': True, 'job': ret}
 
+def getLastJob(engine, teamId, jobType):
+    with engine.connect() as con:
+        sql = f'''
+        select * 
+        from "public".jobs as j
+        where j.details ->> 'type' = '{jobType}'
+        and j.team_id = {teamId}
+        order by id desc
+        limit 1
+        '''
+        statement = sqlalchemy.sql.text(sql)
+        res = con.execute(statement).fetchone()
+        return res
+
 def addJob(engine, teamId, details, jobUuid):
     with engine.connect() as con:
         d = { 
@@ -437,7 +459,7 @@ def addJob(engine, teamId, details, jobUuid):
         '''
         statement = sqlalchemy.sql.text(sql)
         res = con.execute(statement, **d).fetchone()
-        logger.info(f'updateJob res {res}...')
+        logger.info(f'addJob res {res}...')
         return res[0]
 
 def addMessage(engine, teamId, targetId, message, jobUuid):
@@ -455,7 +477,7 @@ def addMessage(engine, teamId, targetId, message, jobUuid):
         '''
         statement = sqlalchemy.sql.text(sql)
         res = con.execute(statement, **d).fetchone()
-        logger.info(f'updateJob res {res}...')
+        logger.info(f'addMessage res {res}...')
         return res[0]
 
 def getMessages(engine):
@@ -520,3 +542,24 @@ def getMessages(engine):
                 logger.info(f"jobRow id: {jobRow['id']}...")
                 return jobRow, queueRow
         return False, False
+
+def getAlerts(engine, teamId, lastJob):
+    sql = f'''
+    select 
+    mrr.email, 
+    mrr.customer_created_on,
+    mrr.mrr,
+    mrr.mrr_status,
+    mrr.mrr_rank,
+    mrr.percent_off_precise 
+    from team_{teamId}_stripe.mrr_facts as mrr 
+    where 
+    mrr.current_month = 1
+    and (
+        mrr.customer_created_on > '{lastJob['details']['maxCreatedOn']}'
+        or mrr.canceled_dt > '{lastJob['details']['maxCanceledOn']}'
+    )
+    order by mrr.created_on desc
+    '''
+    df = pd.read_sql(sql, engine)
+    return df.to_dict(orient='records')

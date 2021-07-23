@@ -30,23 +30,23 @@ objs = {
         'api': stripe.Coupon,
         'expand': []
     },
-    'customers': {
-        'api': stripe.Customer,
-        'expand': []
-    },
-    'subscriptions': {
-        'api': stripe.Subscription,
-        'expand': [],
-        'all': True,
-    },
-    'plans': {
-        'api': stripe.Plan,
-        'expand': []
-    },
-    'invoices': {
-        'api': stripe.Invoice,
-        'expand': ['data.discounts']
-    }
+    # 'customers': {
+    #     'api': stripe.Customer,
+    #     'expand': []
+    # },
+    # 'subscriptions': {
+    #     'api': stripe.Subscription,
+    #     'expand': [],
+    #     'all': True,
+    # },
+    # 'plans': {
+    #     'api': stripe.Plan,
+    #     'expand': []
+    # },
+    # 'invoices': {
+    #     'api': stripe.Invoice,
+    #     'expand': ['data.discounts']
+    # }
 }
 
 def testKey(apiKey):

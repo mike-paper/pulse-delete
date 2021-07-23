@@ -104,6 +104,7 @@ with annuals as (
 ), mrr3 as (
 	select 
 	ce.email,
+	c.created_on as customer_created_on,
 	mrr.*,
 	case 
 	when date_trunc('month', mrr.canceled_dt) = date_trunc('month', mrr.mrr_dt) then 0
