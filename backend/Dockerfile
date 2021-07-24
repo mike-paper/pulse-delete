@@ -11,9 +11,17 @@ RUN apt-get install -y libglib2.0-0 \
     libnss3 \
     libgconf-2-4 \
     libfontconfig1
-ENV CHROME_VERSION 91.0.4472.114
-RUN apt-get update -y && apt-get install -y google-chrome-stable=$CHROME_VERSION-1
+ENV CHROME_VERSION 90.0.4430.212
+# => was getting ERROR [ 6/18] RUN apt-get update -y && apt-get install -y google-chrome-stable=91.0.4472.164-1 
+# upgraded to 92.0.4515.107, might need to downgrade to 91.0.4472.164 if something breaks in Slack
+# RUN apt-get update -y && apt-get install -y google-chrome-stable=$CHROME_VERSION-1
 # RUN apt-get install -y google-chrome-stable=$CHROME_VERSION-1
+
+# Check available versions here: https://www.ubuntuupdates.org/package/google_chrome/stable/main/base/google-chrome-stable
+# ARG CHROME_VERSION="81.0.4044.113-1"
+RUN wget --no-verbose -O /tmp/chrome.deb https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}-1_amd64.deb \
+  && apt install -y /tmp/chrome.deb \
+  && rm /tmp/chrome.deb
 
 # Set up Chromedriver Environment variables
 ENV CHROMEDRIVER_VERSION 90.0.4430.24
