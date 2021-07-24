@@ -30,10 +30,10 @@ objs = {
         'api': stripe.Coupon,
         'expand': []
     },
-    # 'customers': {
-    #     'api': stripe.Customer,
-    #     'expand': []
-    # },
+    'customers': {
+        'api': stripe.Customer,
+        'expand': []
+    },
     # 'subscriptions': {
     #     'api': stripe.Subscription,
     #     'expand': [],
@@ -43,10 +43,10 @@ objs = {
     #     'api': stripe.Plan,
     #     'expand': []
     # },
-    # 'invoices': {
-    #     'api': stripe.Invoice,
-    #     'expand': ['data.discounts']
-    # }
+    'invoices': {
+        'api': stripe.Invoice,
+        'expand': ['data.discounts']
+    }
 }
 
 def testKey(apiKey):

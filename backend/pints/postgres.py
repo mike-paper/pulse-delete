@@ -379,7 +379,7 @@ def updateJob(engine, teamId, jobId, jobUuid, details):
             logger.info(f'updateJob INSERT {res}...')
             return res[0]
 
-def updateJobStatus(engine, jobId, status, error=None, maxId=None):
+def updateJobStatus(engine, jobId, status, error=None, details=None):
     with engine.connect() as con:
         d = { 
             "jobId": jobId,
@@ -402,14 +402,21 @@ def updateJobStatus(engine, jobId, status, error=None, maxId=None):
             '''
             statement = sqlalchemy.sql.text(sql)
             res = con.execute(statement, **d)
-        if maxId:
-            sql = '''
-            UPDATE jobs 
-            SET details = jsonb_set(details, '{maxId}', to_jsonb((:maxId)::int))
-            where id = :jobId;
-            '''
-            statement = sqlalchemy.sql.text(sql)
-            res = con.execute(statement, **d)
+        if details:
+            for k, v in details.items():
+                logger.info(f'details.items {k} {v}...')
+                d2 = {
+                    'k': k,
+                    'v': v,
+                    'jobId': jobId,
+                }
+                sql = f'''
+                UPDATE jobs 
+                SET details = jsonb_set(details, '{{{k}}}', to_jsonb('{v}'::text))
+                where id = {jobId};
+                '''
+                logger.info(f'updated job statement {sql}...')
+                res = con.execute(sql)
         logger.info(f'updated job id {jobId}...')
         return True
 
@@ -437,6 +444,7 @@ def getLastJob(engine, teamId, jobType):
         from "public".jobs as j
         where j.details ->> 'type' = '{jobType}'
         and j.team_id = {teamId}
+        and j.status = 'complete'
         order by id desc
         limit 1
         '''
@@ -561,5 +569,6 @@ def getAlerts(engine, teamId, lastJob):
     )
     order by mrr.created_on desc
     '''
+    logger.info(f'getAlerts sql: {sql}')
     df = pd.read_sql(sql, engine)
     return df.to_dict(orient='records')

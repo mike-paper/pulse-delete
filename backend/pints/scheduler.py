@@ -44,7 +44,8 @@ def startScheduler(engine):
     scheduler.start()
     checkQueueJob = scheduler.add_job(checkQueue, trigger='interval', seconds=10)
     # testSchedJob = scheduler.add_job(testSched, trigger='interval', seconds=10)
-    hourlyJob = scheduler.add_job(func=runHourly, trigger='cron', minute=13, second=30)
+    # hourlyJob = scheduler.add_job(func=runHourly, trigger='cron', minute=40, second=30)
+    runHourly()
     # hourlyJob = scheduler.add_job(runHourly, trigger='interval', seconds=10)
     # weeklyJob = scheduler.add_job(func=runWeekly, kwargs={'engine': engine}, trigger='cron', day_of_week='mon', hour=8, minute=30, second=0)
     # monthlyJob = scheduler.add_job(func=runMonthly, kwargs={'engine': engine}, trigger='cron', day=1, hour=8, minute=30, second=0)
@@ -55,7 +56,7 @@ def runHourly():
     logger.info(f'runHourly...')
     with app.app_context():
         teams = pints.postgres.getTeams(db.engine)
-        # teams = [team for team in teams if team['id'] == 4]
+        teams = [team for team in teams if team['id'] == 4]
         for team in teams:
             logger.info(f"team {team['id']}...")
             settings = pints.postgres.getSettings(db.engine, team['id'])
@@ -120,6 +121,7 @@ def checkQueue():
                     logger.info(f'sendNotifications...')
                     lastJob = pints.postgres.getLastJob(db.engine, jobRow['team_id'], 'sendNotifications')
                     if not lastJob:
+                        logger.info(f'adding first lastJob...')
                         dt = datetime.datetime.utcnow().isoformat().replace('T', ' ')
                         details = {
                             'maxCreatedOn': dt,
@@ -132,13 +134,18 @@ def checkQueue():
                         lastJob = pints.postgres.getLastJob(db.engine, jobRow['team_id'], 'sendNotifications')
                     logger.info(f'sendNotifications lastJob: {lastJob}')
                     alerts = pints.postgres.getAlerts(db.engine, jobRow['team_id'], lastJob)
-                    d = {
-                        'name': 'John Doe',
-                        'email': alerts['email'],
-                        'mrr': alerts['mrr'],
-                        'msg': 'Thanks for the $100.00'
-                    }
-                    pints.slack.newCustomer(d)
+                    logger.info(f'sendNotifications alerts: {alerts}')
+                    for alert in alerts:
+                        logger.info(f'sendNotifications alert: {alert}')
+                        # TODO send alert
+                        # pints.postgres.updateMessage(db.engine, alert['message_id'], {'status': 'sent'})
+                        d = {
+                            'name': 'John Doe',
+                            'email': alert['email'],
+                            'mrr': alert['mrr'],
+                            'msg': 'Thanks for the $100.00'
+                        }
+                        pints.slack.newCustomer(d)
                     dt = datetime.datetime.utcnow().isoformat().replace('T', ' ')
                     details = {
                         'maxCreatedOn': dt,

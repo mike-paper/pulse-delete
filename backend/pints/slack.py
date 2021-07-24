@@ -129,7 +129,7 @@ def newCustomer(d):
                     "type": "header",
                     "text": {
                         "type": "plain_text",
-                        "text": f":moneybag: New MRR: ${d['mrr']}k",
+                        "text": f":moneybag: New MRR: ${d['mrr']} from {d['email']}",
                         "emoji": True
                     }
                 },
