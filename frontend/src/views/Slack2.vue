@@ -64,6 +64,8 @@ export default {
             .catch((error) => {
               console.error(error)
             })
+        } else {
+          this.$router.push({ name: 'Login', query: { goto: 'Landing', slackCode:  this.storeState.slackCode}})
         }
       }
     }

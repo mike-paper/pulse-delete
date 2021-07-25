@@ -233,9 +233,12 @@ def update_secret():
         return json.dumps(keyTest), 200, {'ContentType':'application/json'} 
     if data['type'] == 'slack':
         user = getUser(data)
-        secrets = pints.postgres.getSecrets(db.engine, user['team_id'])
-        secrets['slackCode'] = pints.utils.encrypt(data['slackCode'])
-        pints.postgres.updateSecrets(db.engine, user['team_id'], secrets)
+        slackAuth = pints.slack.getToken(data['slackCode'])
+        if slackAuth.get('access_token', False):
+            secrets = pints.postgres.getSecrets(db.engine, user['team_id'])
+            slackAuth['access_token'] = pints.utils.encrypt(slackAuth['access_token'])
+            secrets['slack'] = slackAuth
+            pints.postgres.updateSecrets(db.engine, user['team_id'], secrets)
     return json.dumps({'ok': True}), 200, {'ContentType':'application/json'} 
 
 @app.route('/get_recent_jobs', methods=["GET", "POST"])

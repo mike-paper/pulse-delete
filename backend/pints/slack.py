@@ -4,6 +4,8 @@ from slack_sdk.errors import SlackApiError
 from logger import logger
 
 token = os.environ.get('PAPER_SLACK_TOKEN')
+CLIENT_ID = os.environ.get('PAPER_SLACK_CLIENT_ID')
+CLIENT_SECRET = os.environ.get('PAPER_SLACK_SECRET')
 
 client = WebClient(token=token)
 
@@ -26,6 +28,16 @@ def testPush():
         ]
         )
     print('testPush result...', response["message"])
+
+def getToken(code):
+    response = client.api_call(
+        "oauth.access",
+        client_id=CLIENT_ID,
+        client_secret=CLIENT_SECRET,
+        code=code
+    )
+    logger.info(f'getToken... {response}')
+    return response
 
 def push(d):
     logger.info(f'push...')
