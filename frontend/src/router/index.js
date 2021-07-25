@@ -4,6 +4,7 @@ import Analyze from '../views/Analyze.vue'
 import Settings from '../views/Settings.vue'
 import Login from '../views/Login.vue'
 import Callback from '../views/Callback.vue'
+import Slack2 from '../views/Slack2.vue'
 import Logout from '../views/Logout.vue'
 
 // Vue.use(VueRouter)
@@ -40,6 +41,11 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: Login
+  },
+  {
+    path: '/slack2',
+    name: 'Slack2',
+    component: Slack2
   },
   {
     path: '/callback',
