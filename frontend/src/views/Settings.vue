@@ -384,6 +384,31 @@
                 </a>
             </div>
           </div>
+          <div 
+            class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4"
+          >
+            <div class="col-span-6 sm:col-span-2">
+              <div>
+                <label for="price" class="block text-sm font-medium text-gray-700">Channel</label>
+                <div class="mt-1 relative rounded-md shadow-sm">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span class="text-gray-500 sm:text-sm">
+                      #
+                    </span>
+                  </div>
+                  <input 
+                    type="text" 
+                    name="slackChannel" 
+                    autocomplete="password" 
+                    v-model="storeState.user.settings.notifications.slackChannel"
+                    id="slackChannel" 
+                    class="pl-6 mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-gray-900 focus:border-gray-900 sm:text-sm" 
+                    placeholder="channel-name" 
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         
       </div>
@@ -513,7 +538,8 @@ export default {
         storeState: store.state,
         slackAuthUrl: 'https://slack.com/oauth/v2/authorize' + 
           '?client_id=2068350445268.2075584116417&scope=channels:read' + 
-          ',chat:write.public,chat:write,files:write&user_scope=',
+          ',chat:write.public,chat:write,files:write&user_scope=' +
+          '&redirect_uri=https://pulse.trypaper.io/slack2',
         dbtLogs: [],
         stripeApiKey: '',
         sheetsCreds: '',

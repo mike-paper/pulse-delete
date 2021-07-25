@@ -122,7 +122,7 @@ def newCustomer(d):
     try:
         # response = client.chat_postMessage(channel='#random', text="Hello world!")
         response = client.chat_postMessage(
-            channel='#demo',
+            channel=f"#{d['slackChannel']}",
             text="Paper Alert",
             blocks = [
                 {

@@ -42,10 +42,10 @@ def startScheduler(engine):
         timezone=pytz.utc
         )
     scheduler.start()
-    checkQueueJob = scheduler.add_job(checkQueue, trigger='interval', seconds=10)
+    checkQueueJob = scheduler.add_job(checkQueue, trigger='interval', seconds=60)
     # testSchedJob = scheduler.add_job(testSched, trigger='interval', seconds=10)
-    # hourlyJob = scheduler.add_job(func=runHourly, trigger='cron', minute=40, second=30)
-    runHourly()
+    hourlyJob = scheduler.add_job(func=runHourly, trigger='cron', minute=30, second=30)
+    # runHourly()
     # hourlyJob = scheduler.add_job(runHourly, trigger='interval', seconds=10)
     # weeklyJob = scheduler.add_job(func=runWeekly, kwargs={'engine': engine}, trigger='cron', day_of_week='mon', hour=8, minute=30, second=0)
     # monthlyJob = scheduler.add_job(func=runMonthly, kwargs={'engine': engine}, trigger='cron', day=1, hour=8, minute=30, second=0)
@@ -59,22 +59,21 @@ def runHourly():
         teams = [team for team in teams if team['id'] == 4]
         for team in teams:
             logger.info(f"team {team['id']}...")
-            settings = pints.postgres.getSettings(db.engine, team['id'])
-            # TODO if settings has notifications turned on, check for new customers
-            # since last job run
             jobUuids = fullRefresh(db.engine, team['id'])
-            dt = datetime.datetime.utcnow().isoformat().replace('T', ' ')
-            details = {
-                'status': 'pending',
-                'dependencies': jobUuids,
-                'type': 'sendNotifications',
-                'maxCreatedOn': dt,
-                'maxCanceledOn': dt,
-            }
-            jobUuid = uuid.uuid4().hex
-            targetId = pints.postgres.addJob(db.engine, team['id'], details, jobUuid)
-            messageId = pints.postgres.addMessage(db.engine, team['id'], targetId, details, jobUuid)
-            logger.info(f'runHourly messageId... {messageId}')
+            settings = pints.postgres.getSettings(db.engine, team['id'])
+            if settings['notifications'].get('alerts', {}).get('slack', False):
+                dt = datetime.datetime.utcnow().isoformat().replace('T', ' ')
+                details = {
+                    'status': 'pending',
+                    'dependencies': jobUuids,
+                    'type': 'sendNotifications',
+                    'maxCreatedOn': dt,
+                    'maxCanceledOn': dt,
+                }
+                jobUuid = uuid.uuid4().hex
+                targetId = pints.postgres.addJob(db.engine, team['id'], details, jobUuid)
+                messageId = pints.postgres.addMessage(db.engine, team['id'], targetId, details, jobUuid)
+                logger.info(f'runHourly messageId... {messageId}')
             # TODO check if alert / notifications need to be sent
         return True
 
@@ -139,11 +138,13 @@ def checkQueue():
                         logger.info(f'sendNotifications alert: {alert}')
                         # TODO send alert
                         # pints.postgres.updateMessage(db.engine, alert['message_id'], {'status': 'sent'})
+                        settings = pints.postgres.getSettings(db.engine, jobRow['team_id'])
                         d = {
                             'name': 'John Doe',
                             'email': alert['email'],
                             'mrr': alert['mrr'],
-                            'msg': 'Thanks for the $100.00'
+                            'msg': 'Thanks for the $100.00',
+                            'slackChannel': settings['notifications']['slackChannel']
                         }
                         pints.slack.newCustomer(d)
                     dt = datetime.datetime.utcnow().isoformat().replace('T', ' ')

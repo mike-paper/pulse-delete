@@ -12,6 +12,7 @@ export const store = {
         oauth: false,
         hasStripe: false
       },
+      slackCode: false,
       // settings: {
       //   notifications: {
       //     alerts: {

@@ -231,6 +231,12 @@ def update_secret():
             jobIds = pints.stripe.getAll(db.engine, user['team_id'])
             keyTest['jobIds'] = jobIds
         return json.dumps(keyTest), 200, {'ContentType':'application/json'} 
+    if data['type'] == 'slack':
+        user = getUser(data)
+        secrets = pints.postgres.getSecrets(db.engine, user['team_id'])
+        secrets['slackCode'] = pints.utils.encrypt(data['slackCode'])
+        pints.postgres.updateSecrets(db.engine, user['team_id'], secrets)
+    return json.dumps({'ok': True}), 200, {'ContentType':'application/json'} 
 
 @app.route('/get_recent_jobs', methods=["GET", "POST"])
 def get_recent_jobs():
