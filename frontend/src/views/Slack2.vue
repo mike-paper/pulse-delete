@@ -44,7 +44,9 @@ export default {
       this.$router.push({ name: 'Logout', query: { goto: 'Landing' }})
     },  
     checkUrl() {
+      console.log('checkUrl...')
       if (this.$route.query.code) {
+        console.log('checkUrl code...')
         this.storeState.slackCode = this.$route.query.code
         if (this.storeState.isLoggedIn) {
           // send to backend secret store
