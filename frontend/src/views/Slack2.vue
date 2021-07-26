@@ -28,7 +28,7 @@ export default {
     this.emitter.on('user-login', d => {
       console.log('user-login', d);
     });
-    this.checkUrl();
+    // this.checkUrl();
   },
   data() {
       return {
@@ -42,7 +42,15 @@ export default {
     },
     logout() {
       this.$router.push({ name: 'Logout', query: { goto: 'Landing' }})
-    },  
+    },
+    getApiUrl(endpoint) {
+      if (process.env.NODE_ENV != 'production') return `http://127.0.0.1:5000/${endpoint}`
+      return `https://pulse-backend.onrender.com/${endpoint}`
+    },
+    getAppUrl(endpoint) {
+      if (process.env.NODE_ENV != 'production') return `http://localhost:8080/${endpoint}`
+      return `https://trypaper.io/${endpoint}`
+    }, 
     checkUrl() {
       console.log('checkUrl...')
       if (this.$route.query.code) {

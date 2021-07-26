@@ -30,10 +30,11 @@ def testPush():
     print('testPush result...', response["message"])
 
 def getToken(code):
-    response = client.api_call(
-        "oauth.access",
+    authClient = WebClient()
+    response = authClient.oauth_v2_access(
         client_id=CLIENT_ID,
         client_secret=CLIENT_SECRET,
+        redirect_uri='https://pulse.trypaper.io/slack2',
         code=code
     )
     logger.info(f'getToken... {response}')

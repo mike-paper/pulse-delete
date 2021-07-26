@@ -231,9 +231,11 @@ def update_secret():
             jobIds = pints.stripe.getAll(db.engine, user['team_id'])
             keyTest['jobIds'] = jobIds
         return json.dumps(keyTest), 200, {'ContentType':'application/json'} 
-    if data['type'] == 'slack':
+    elif data['type'] == 'slack':
+        logger.info(f"update_secret slack...")
         user = getUser(data)
-        slackAuth = pints.slack.getToken(data['slackCode'])
+        slackAuth = pints.slack.getToken(data['code'])
+        logger.info(f"update_secret slackAuth...{slackAuth}")
         if slackAuth.get('access_token', False):
             secrets = pints.postgres.getSecrets(db.engine, user['team_id'])
             slackAuth['access_token'] = pints.utils.encrypt(slackAuth['access_token'])

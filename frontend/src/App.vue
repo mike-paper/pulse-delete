@@ -416,6 +416,32 @@ export default {
           this.storeState.gotUserData = true
         })
     },
+    checkUrl() {
+      console.log('checkUrl...')
+      if (this.$route.query.code) {
+        console.log('checkUrl code...')
+        if (this.storeState.isLoggedIn) {
+          // send to backend secret store
+          const path = this.getApiUrl('update_secret')
+          let secretType = this.$route.name.toLowerCase().replace('2', '')
+          let d = {
+            user: this.storeState.user, 
+            code: this.$route.query.code,
+            type: secretType
+            }
+          axios.post(path, d)
+            .then((res) => {
+              this.updatingStripeKey = false
+              console.log('got update_secret: ', res.data)
+            })
+            .catch((error) => {
+              console.error(error)
+            })
+        } else {
+          // this.$router.push({ name: 'Login', query: { goto: 'Landing', slackCode:  this.storeState.slackCode}})
+        }
+      }
+    },
     async checkIfLoggedIn() {
       console.log('checkIfLoggedIn1...', this.storeState.isLoggedIn)
       setTimeout(() => this.storeState.gotUserData = true, 2000);
@@ -427,6 +453,7 @@ export default {
         this.getUserData()
         this.getDbt()
         this.getRecentJobs()
+        this.checkUrl()
       } else {
         this.storeState.gotUserData = true
         this.$router.push({ name: 'Login'})
