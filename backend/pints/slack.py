@@ -67,7 +67,7 @@ def getToken(code):
         'bot_user_id': oauth_response.get("bot_user_id"),
         'bot_scopes': oauth_response.get("scope"),  # comma-separated string
         'user_id': installer.get("id"),
-        'user_token': installer.get("access_token"),
+        # 'user_token': installer.get("access_token"),
         'user_scopes': installer.get("scope"),  # comma-separated string
         'incoming_webhook_url': incoming_webhook.get("url"),
         'incoming_webhook_channel': incoming_webhook.get("channel"),
