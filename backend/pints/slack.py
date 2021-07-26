@@ -37,8 +37,10 @@ def getToken(code):
         redirect_uri='https://pulse.trypaper.io/slack2',
         code=code
     )
-    installed_enterprise = oauth_response.get("enterprise", {})
+    installed_enterprise = {}
     is_enterprise_install = oauth_response.get("is_enterprise_install")
+    if is_enterprise_install:
+        installed_enterprise = oauth_response.get("enterprise", {})
     installed_team = oauth_response.get("team", {})
     installer = oauth_response.get("authed_user", {})
     incoming_webhook = oauth_response.get("incoming_webhook", {})
