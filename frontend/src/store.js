@@ -8,6 +8,8 @@ export const store = {
       gotUserData: false,
       gotDbt: false,
       hideSidebar: false,
+      gotMetrics: false,
+      metricData: {},
       user: {
         oauth: false,
         hasStripe: false

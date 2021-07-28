@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="!gotMetrics">
+    <div v-if="!storeState.gotMetrics">
       <div class="flex justify-center space-y-8 w-full pt-32">
         <svg class="animate-spin -ml-1 mr-3 h-20 w-20 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -21,9 +21,9 @@
             </dt>
             <dd class="mt-1 flex justify-between items-baseline md:block lg:flex">
               <div class="flex items-baseline text-2xl font-semibold text-gray-900">
-                ${{(metricData.summary[2].mrr/1000).toFixed(1)}}k
+                ${{(storeState.metricData.summary[2].mrr/1000).toFixed(1)}}k
                 <span class="ml-2 text-sm font-medium text-gray-500"> 
-                  from ${{(metricData.summary[1].mrr/1000).toFixed(1)}}k
+                  from ${{(storeState.metricData.summary[1].mrr/1000).toFixed(1)}}k
                 </span>
               </div>
 
@@ -31,7 +31,7 @@
                 <ArrowSmUpIcon v-if="'increase' === 'increase'" class="-ml-1 mr-0.5 flex-shrink-0 self-center h-5 w-5 text-green-500" aria-hidden="true" />
                 <ArrowSmDownIcon v-else class="-ml-1 mr-0.5 flex-shrink-0 self-center h-5 w-5 text-red-500" aria-hidden="true" />
                 <span class="sr-only"> {{ 'increase' === 'increase' ? 'Increased' : 'Decreased' }} by </span>
-                ${{((metricData.summary[2].mrr-metricData.summary[1].mrr)/1000).toFixed(1)}}k
+                ${{((storeState.metricData.summary[2].mrr-storeState.metricData.summary[1].mrr)/1000).toFixed(1)}}k
               </div>
             </dd>
           </div>
@@ -41,9 +41,9 @@
             </dt>
             <dd class="mt-1 flex justify-between items-baseline md:block lg:flex">
               <div class="flex items-baseline text-2xl font-semibold text-gray-900">
-                {{Math.round(metricData.summary[2].active)}}
+                {{Math.round(storeState.metricData.summary[2].active)}}
                 <span class="ml-2 text-sm font-medium text-gray-500"> 
-                  from {{Math.round(metricData.summary[1].active)}}
+                  from {{Math.round(storeState.metricData.summary[1].active)}}
                 </span>
               </div>
 
@@ -51,7 +51,7 @@
                 <ArrowSmUpIcon v-if="'increase' === 'increase'" class="-ml-1 mr-0.5 flex-shrink-0 self-center h-5 w-5 text-green-500" aria-hidden="true" />
                 <ArrowSmDownIcon v-else class="-ml-1 mr-0.5 flex-shrink-0 self-center h-5 w-5 text-red-500" aria-hidden="true" />
                 <span class="sr-only"> {{ 'increase' === 'increase' ? 'Increased' : 'Decreased' }} by </span>
-                {{(Math.round(metricData.summary[2].active-metricData.summary[1].active))}}
+                {{(Math.round(storeState.metricData.summary[2].active-storeState.metricData.summary[1].active))}}
               </div>
             </dd>
           </div>
@@ -61,9 +61,9 @@
             </dt>
             <dd class="mt-1 flex justify-between items-baseline md:block lg:flex">
               <div class="flex items-baseline text-2xl font-semibold text-gray-900">
-                ${{(metricData.summary[2].churned_mrr/1000).toFixed(1)}}k
+                ${{(storeState.metricData.summary[2].churned_mrr/1000).toFixed(1)}}k
                 <span class="ml-2 text-sm font-medium text-gray-500"> 
-                  from ${{(metricData.summary[1].churned_mrr/1000).toFixed(1)}}k
+                  from ${{(storeState.metricData.summary[1].churned_mrr/1000).toFixed(1)}}k
                 </span>
               </div>
 
@@ -71,7 +71,7 @@
                 <ArrowSmUpIcon v-if="'increase' === 'increase'" class="-ml-1 mr-0.5 flex-shrink-0 self-center h-5 w-5 text-green-500" aria-hidden="true" />
                 <ArrowSmDownIcon v-else class="-ml-1 mr-0.5 flex-shrink-0 self-center h-5 w-5 text-red-500" aria-hidden="true" />
                 <span class="sr-only"> {{ 'increase' === 'increase' ? 'Increased' : 'Decreased' }} by </span>
-                ${{((metricData.summary[2].churned_mrr-metricData.summary[1].churned_mrr)/1000).toFixed(1)}}k
+                ${{((storeState.metricData.summary[2].churned_mrr-storeState.metricData.summary[1].churned_mrr)/1000).toFixed(1)}}k
               </div>
             </dd>
           </div>
@@ -97,7 +97,7 @@
         </div>
         
       </div>
-      <div class="-mb-16 float-right mt-4 right-0 z-10" id="somethingelse">
+      <!-- <div class="-mb-16 float-right mt-4 right-0 z-10" id="somethingelse">
         <SwitchGroup as="div" class="flex items-center">
           <Switch v-model="tableFilters.active" :class="[tableFilters.active ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500']">
             <span class="sr-only">Use setting</span>
@@ -107,7 +107,7 @@
             <span class="text-sm font-medium text-gray-900">Active only</span>
           </SwitchLabel>
         </SwitchGroup>
-      </div>
+      </div> -->
       <div id="customerTable">
         
       </div>
@@ -139,9 +139,9 @@ export default {
   components: {
     ArrowSmUpIcon,
     ArrowSmDownIcon,
-    Switch,
-    SwitchGroup,
-    SwitchLabel,
+    // Switch,
+    // SwitchGroup,
+    // SwitchLabel,
   },
   created() {
     var yourVlSpec = {
@@ -192,7 +192,7 @@ export default {
           `
           )
       }, {
-        id: 'status',
+        id: 'mrr_status',
         name: 'Status'
       }, {
         id: 'mrr',
@@ -215,9 +215,18 @@ export default {
   },
   mounted() {
     this.emitter.on('user-login', d => {
-      this.getMetrics()
+      // this.getMetrics()
     });
-    
+    this.emitter.on('got-metrics', d => {
+      this.createCharts()
+      var self = this
+      setTimeout(() => self.createCustomerTable(), 0);
+    });
+    if (this.storeState.gotMetrics) {
+      this.createCharts()
+      var self = this
+      setTimeout(() => self.createCustomerTable(), 0);
+    }
     // this.startTyped()
   },
   data() {
@@ -228,7 +237,7 @@ export default {
         tableFilters: {
           active: false,
         },
-        metricData: [],
+        // metricData: [],
         stats: [
           { name: 'Total Subscribers', stat: '71,897', previousStat: '70,946', change: '12%', changeType: 'increase' },
           { name: 'Avg. Open Rate', stat: '58.16%', previousStat: '56.14%', change: '2.02%', changeType: 'increase' },
@@ -343,7 +352,8 @@ export default {
     },
     createCustomerTable() {
       // window.customerGrid.render(document.getElementById("customerTable"));
-      let data = this.metricData.data.filter(o => this.tableFilters.active ? o.status === 'active' : true)
+      let data = this.storeState.metricData.data.filter(o => (this.tableFilters.active ? o.status === 'active' : true) && o.current_month === 1)
+      data
       console.log('createCustomerTable...', data.length)
       window.customerGrid.updateConfig({
       // lets update the columns field only
@@ -452,36 +462,16 @@ export default {
       }
       
     },
-    getMetrics() {
-      console.log('getMetrics...')
-      this.gotMetrics = false
-      const path = this.getApiUrl('get_metrics')
-      let d = {user: this.storeState.user, userData: this.storeState.userData}
-      axios.post(path, d)
-        .then((res) => {
-          console.log('got get_metrics: ', res.data)
-          this.gotMetrics = true
-          // this.$forceUpdate()
-          this.metricData = reactive(res.data)
-          
-          this.createCharts()
-          var self = this
-          setTimeout(() => self.createCustomerTable(), 0);
-        })
-        .catch((error) => {
-          console.error(error)
-        })
-    },
     createCharts() {
       let opts = {
         config: this.vegaConfig,
         actions: false,
         }
       let mrr = this.deepCopy(this.vegaSpec)
-      mrr.data.values = this.metricData.data
+      mrr.data.values = this.storeState.metricData.data
       window.vegaEmbed('#mrr', mrr, opts);
       let customers = this.deepCopy(this.vegaSpec)
-      customers.data.values = this.metricData.data
+      customers.data.values = this.storeState.metricData.data
       customers.encoding = {
           "x": {
             "field": "mrr_month_dt", 
@@ -513,7 +503,7 @@ export default {
       }
       window.vegaEmbed('#customers', customers, opts);
       let churn = this.deepCopy(this.vegaSpec)
-      churn.data.values = this.metricData.data
+      churn.data.values = this.storeState.metricData.data
       churn.encoding = {
           "x": {
             "field": "mrr_month_dt", 

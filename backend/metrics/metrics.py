@@ -3,6 +3,8 @@ import uuid
 import altair
 import altair_saver
 import datetime
+import pandas as pd
+import pints
 from logger import logger
 
 from selenium import webdriver
@@ -130,3 +132,30 @@ def getSummary(last3):
     summary['customerMsg'] += f":{summary['customersArrow']}: "
     summary['customerMsg'] += f"{summary['customerGrowthPrcntRounded']}% ({summary['customerGrowth']}) MTD."
     return summary
+
+def getSlackMsg(engine, teamId):
+    sql = '''
+    select 
+    *,
+    1 as active
+    from 
+    "team_{teamId}_stripe".mrr_facts as mrr
+    order by mrr.mrr_dt asc
+    '''.format(teamId=teamId)
+    df = pd.read_sql(sql, engine)
+    piv = df.pivot_table(index='mrr_month_dt', values=['mrr', 'active', 'churned_mrr'], aggfunc='sum')
+    df = json.loads(df.to_json(orient='records'))
+    summary = piv.tail(3).to_dict(orient='records')
+    logger.info(f"piv summary: {summary}")
+    toSlack = {}
+    chart = getMrrChart(df)
+    toSlack['mrrChartUrl'] = pints.cabinet.file(chart['filename'])
+    chart = getCustomerChart(df)
+    toSlack['customerChartUrl'] = pints.cabinet.file(chart['filename'])
+    try:
+        toSlack['summary'] = getSummary(summary)
+    except Exception as e:
+        logger.error(f"error getting summary: {str(e)}")
+        toSlack['summary'] = False
+    logger.info(f"piv summary: {toSlack}")
+    return toSlack

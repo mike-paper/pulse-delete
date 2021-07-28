@@ -26,7 +26,7 @@ import subprocess
 
 
 from logger import logger
-from metrics import metrics
+
 
 SQLALCHEMY_DATABASE_URI = os.environ.get('PAPER_SQLALCHEMY_DATABASE_URI')
 # SQLALCHEMY_ECHO = True
@@ -43,6 +43,7 @@ session_options = {
 db = SQLAlchemy(app, session_options=session_options)
 
 import pints
+from metrics import metrics
 
 pints.scheduler.startScheduler(db.engine)
 
@@ -94,6 +95,8 @@ def checkForTeam(engine, email, userId):
 # testStripe = pints.stripe.getObject(db.engine, 1, 'invoices')
 # testStripe = pints.stripe.getAll(db.engine, 4)
 # testStripe = pints.scheduler.testSched()
+# slackInfo = pints.postgres.getSlackInfo(db.engine, 5)
+# pints.slack.testPush({'msg': 'in summerrrrrr!!!!'}, slackInfo['bot_token'])
 
 @app.route('/ping', methods=["GET"])
 def ping():
@@ -235,12 +238,14 @@ def update_secret():
         logger.info(f"update_secret slack...")
         user = getUser(data)
         slackAuth = pints.slack.getToken(data['code'])
-        logger.info(f"update_secret slackAuth...{slackAuth}")
+        logger.info(f"update_secret slackAuth...")
         if slackAuth.get('bot_token', False):
+            logger.info(f"update_secret slackAuth has token...")
             secrets = pints.postgres.getSecrets(db.engine, user['team_id'])
             slackAuth['bot_token'] = pints.utils.encrypt(slackAuth['bot_token'])
             secrets['slack'] = slackAuth
             pints.postgres.updateSecrets(db.engine, user['team_id'], secrets)
+            logger.info(f"update_secret slackAuth success...")
     return json.dumps({'ok': True}), 200, {'ContentType':'application/json'} 
 
 @app.route('/get_recent_jobs', methods=["GET", "POST"])
@@ -417,40 +422,11 @@ def get_metrics():
     from 
     "team_{teamId}_stripe".mrr_facts as mrr
     order by mrr.mrr_dt asc
+    -- limit 200
     '''.format(teamId=user['team_id'])
     df = pd.read_sql(sql, db.engine)
     piv = df.pivot_table(index='mrr_month_dt', values=['mrr', 'active', 'churned_mrr'], aggfunc='sum')
     df = json.loads(df.to_json(orient='records'))
-    summary = piv.tail(3).to_dict(orient='records')
-    logger.info(f"piv summary: {summary}")
-    # summary = piv.tail(1).to_dict(orient='records')[0]
-    # prevMonth = piv.tail(2).to_dict(orient='records')[1]
-    toSlack = {}
-    chart = metrics.getMrrChart(df)
-    toSlack['mrrChartUrl'] = pints.cabinet.file(chart['filename'])
-    chart = metrics.getCustomerChart(df)
-    toSlack['customerChartUrl'] = pints.cabinet.file(chart['filename'])
-    try:
-        toSlack['summary'] = metrics.getSummary(summary)
-    except Exception as e:
-        logger.error(f"error getting summary: {str(e)}")
-        toSlack['summary'] = False
-    # logger.info(f'chart: {chart}')
-    # app.wsgi_app.add_files('static/', prefix='assets/')
-    # chart['title'] = 'MRR'
-    logger.info(f"piv summary: {toSlack}")
-    # res = pints.slack.push(toSlack)
-    # logger.info(f'pints.slack.push: {res}')
-    # res = pints.sheets.push(
-    #     {
-    #         'df': piv.reset_index(),
-    #         'spreadsheetId': '1HrMEtpyW7EQZo-QEHDJBjsKCOrEUPF62fBYjNdcPPr0',
-    #         'startCell': 'A1',
-    #         'sheet': 'Sheet1'
-    #     }
-    #         )
-    # logger.info(f'pints.slack.push: {res}')
-    
     ret = {
         'ok': True, 
         'data': df,

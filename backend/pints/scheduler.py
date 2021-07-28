@@ -6,6 +6,7 @@ import sqlalchemy
 import json
 import pytz
 import uuid
+from metrics import metrics
 from app import app, db
 
 
@@ -44,8 +45,9 @@ def startScheduler(engine):
     scheduler.start()
     checkQueueJob = scheduler.add_job(checkQueue, trigger='interval', seconds=60)
     # testSchedJob = scheduler.add_job(testSched, trigger='interval', seconds=10)
-    hourlyJob = scheduler.add_job(func=runHourly, trigger='cron', minute=30, second=30)
-    # runHourly()
+    hourlyJob = scheduler.add_job(func=runHourly, trigger='cron', minute=45, second=30)
+    runHourly()
+    # runWeekly()
     # hourlyJob = scheduler.add_job(runHourly, trigger='interval', seconds=10)
     # weeklyJob = scheduler.add_job(func=runWeekly, kwargs={'engine': engine}, trigger='cron', day_of_week='mon', hour=8, minute=30, second=0)
     # monthlyJob = scheduler.add_job(func=runMonthly, kwargs={'engine': engine}, trigger='cron', day=1, hour=8, minute=30, second=0)
@@ -56,7 +58,7 @@ def runHourly():
     logger.info(f'runHourly...')
     with app.app_context():
         teams = pints.postgres.getTeams(db.engine)
-        teams = [team for team in teams if team['id'] == 4]
+        teams = [team for team in teams if team['id'] == 5]
         for team in teams:
             logger.info(f"team {team['id']}...")
             jobUuids = fullRefresh(db.engine, team['id'])
@@ -74,18 +76,23 @@ def runHourly():
                 targetId = pints.postgres.addJob(db.engine, team['id'], details, jobUuid)
                 messageId = pints.postgres.addMessage(db.engine, team['id'], targetId, details, jobUuid)
                 logger.info(f'runHourly messageId... {messageId}')
-            # TODO check if alert / notifications need to be sent
         return True
 
-def runWeekly(engine):
-    teams = pints.postgres.getTeams(engine)
+def runWeekly():
+    teams = pints.postgres.getTeams(db.engine)
+    teams = [team for team in teams if team['id'] == 5]
     for team in teams:
-        runWeeklyTeam(engine, team['id'])
+        runWeeklyTeam(db.engine, team['id'])
 
 def runWeeklyTeam(engine, teamId):
     logger.info(f'runWeeklyTeam... {teamId}')
     settings = pints.postgres.getSettings(engine, teamId)
     logger.info(f'runWeeklyTeam settings... {settings}')
+    if settings['notifications'].get('weekly', {}).get('slack', False):
+        toSlack = metrics.getSlackMsg(engine, teamId)
+        slackInfo = pints.postgres.getSlackInfo(engine, teamId)
+        pints.slack.weekly(toSlack, slackInfo['bot_token'])
+    return True
 
 def runMonthly(engine):
     return True
@@ -140,13 +147,17 @@ def checkQueue():
                         # pints.postgres.updateMessage(db.engine, alert['message_id'], {'status': 'sent'})
                         settings = pints.postgres.getSettings(db.engine, jobRow['team_id'])
                         d = {
-                            'name': 'John Doe',
                             'email': alert['email'],
                             'mrr': alert['mrr'],
-                            'msg': 'Thanks for the $100.00',
+                            'prev_mrr': alert['prev_mrr'],
+                            'msg': f"Originally signed up on {alert['customer_created_on2']} ({alert['created_days_ago']})",
                             'slackChannel': settings['notifications']['slackChannel']
                         }
-                        pints.slack.newCustomer(d)
+                        slackInfo = pints.postgres.getSlackInfo(db.engine, jobRow['team_id'])
+                        if alert['alert_type'] == 'canceled':
+                            pints.slack.churnAlert(d, slackInfo['bot_token'])
+                        else:
+                            pints.slack.customerAlert(d, slackInfo['bot_token'])
                     dt = datetime.datetime.utcnow().isoformat().replace('T', ' ')
                     details = {
                         'maxCreatedOn': dt,

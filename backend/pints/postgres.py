@@ -228,6 +228,28 @@ def getStripeApiKey(engine, teamId):
             return pints.utils.decrypt(res['stripeApiKey'])
         return False
 
+def getSlackInfo(engine, teamId):
+    with engine.connect() as con:
+        sql = f'''
+        select details
+        from "public".secrets as s
+        where s.team_id = {teamId}
+        order by id desc
+        limit 1
+        '''
+        statement = sqlalchemy.sql.text(sql)
+        res = con.execute(statement).fetchone()
+        if not res:
+            return False
+        res = res[0]
+        if not res.get('slack', False):
+            return False
+        res = res['slack']
+        if res.get('bot_token', False):
+            res['bot_token'] = pints.utils.decrypt(res['bot_token'])
+            return res
+        return False
+
 def getRawTableCount(engine, teamId, table):
     with engine.connect() as con:
         schema = 'public'
@@ -556,10 +578,17 @@ def getAlerts(engine, teamId, lastJob):
     select 
     mrr.email, 
     mrr.customer_created_on,
+    to_char(mrr.customer_created_on::date, 'Mon dd, yyyy') as customer_created_on2,
+    current_date - mrr.customer_created_on::date as created_days_ago,
     mrr.mrr,
+    mrr.prev_mrr,
     mrr.mrr_status,
     mrr.mrr_rank,
-    mrr.percent_off_precise 
+    mrr.percent_off_precise,
+    case
+    when mrr.canceled_dt > '{lastJob['details']['maxCanceledOn']}' then 'canceled'
+    else 'new'
+    end as alert_type
     from team_{teamId}_stripe.mrr_facts as mrr 
     where 
     mrr.current_month = 1

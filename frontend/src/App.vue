@@ -442,6 +442,28 @@ export default {
         }
       }
     },
+    getMetrics() {
+      console.log('getMetrics...')
+      this.gotMetrics = false
+      const path = this.getApiUrl('get_metrics')
+      let d = {user: this.storeState.user, userData: this.storeState.userData}
+      axios.post(path, d)
+        .then((res) => {
+          console.log('got get_metrics: ', res.data)
+          this.storeState.gotMetrics = true
+          // this.$forceUpdate()
+          // this.storeState.metricData = reactive(res.data)
+          this.storeState.metricData = res.data
+          this.emitter.emit('got-metrics');
+          
+          // this.createCharts()
+          // var self = this
+          // setTimeout(() => self.createCustomerTable(), 0);
+        })
+        .catch((error) => {
+          console.error(error)
+        })
+    },
     async checkIfLoggedIn() {
       console.log('checkIfLoggedIn1...', this.storeState.isLoggedIn)
       setTimeout(() => this.storeState.gotUserData = true, 2000);
@@ -454,6 +476,7 @@ export default {
         this.getDbt()
         this.getRecentJobs()
         this.checkUrl()
+        this.getMetrics()
       } else {
         this.storeState.gotUserData = true
         this.$router.push({ name: 'Login'})
