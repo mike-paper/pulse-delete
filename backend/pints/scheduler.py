@@ -6,6 +6,7 @@ import sqlalchemy
 import json
 import pytz
 import uuid
+import os
 from metrics import metrics
 from app import app, db
 
@@ -15,8 +16,15 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
 
+PAPER_DO_NOT_START_SCHEDULER = int(os.environ.get('PAPER_DO_NOT_START_SCHEDULER', 0)) > 0
+
 
 def startScheduler(engine):
+    logger.info(f'startScheduler... {PAPER_DO_NOT_START_SCHEDULER}')
+    if PAPER_DO_NOT_START_SCHEDULER:
+        runWeekly()
+        logger.info(f'not starting scheduler...')
+        return False
     scheduler = False
     apses = pints.postgres.getSchedulerRow(engine)
     logger.info(f'apses... {apses}')
@@ -46,7 +54,8 @@ def startScheduler(engine):
     checkQueueJob = scheduler.add_job(checkQueue, trigger='interval', seconds=60)
     # testSchedJob = scheduler.add_job(testSched, trigger='interval', seconds=10)
     hourlyJob = scheduler.add_job(func=runHourly, trigger='cron', minute=45, second=30)
-    runHourly()
+    return True
+    # runHourly()
     # runWeekly()
     # hourlyJob = scheduler.add_job(runHourly, trigger='interval', seconds=10)
     # weeklyJob = scheduler.add_job(func=runWeekly, kwargs={'engine': engine}, trigger='cron', day_of_week='mon', hour=8, minute=30, second=0)
@@ -58,7 +67,7 @@ def runHourly():
     logger.info(f'runHourly...')
     with app.app_context():
         teams = pints.postgres.getTeams(db.engine)
-        teams = [team for team in teams if team['id'] == 5]
+        # teams = [team for team in teams if team['id'] == 5]
         for team in teams:
             logger.info(f"team {team['id']}...")
             jobUuids = fullRefresh(db.engine, team['id'])
@@ -80,7 +89,7 @@ def runHourly():
 
 def runWeekly():
     teams = pints.postgres.getTeams(db.engine)
-    teams = [team for team in teams if team['id'] == 5]
+    # teams = [team for team in teams if team['id'] == 5]
     for team in teams:
         runWeeklyTeam(db.engine, team['id'])
 
@@ -150,7 +159,7 @@ def checkQueue():
                             'email': alert['email'],
                             'mrr': alert['mrr'],
                             'prev_mrr': alert['prev_mrr'],
-                            'msg': f"Originally signed up on {alert['customer_created_on2']} ({alert['created_days_ago']})",
+                            'msg': f"Originally signed up on {alert['customer_created_on2']} ({alert['created_days_ago']} days to convert)",
                             'slackChannel': settings['notifications']['slackChannel']
                         }
                         slackInfo = pints.postgres.getSlackInfo(db.engine, jobRow['team_id'])

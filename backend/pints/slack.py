@@ -143,7 +143,7 @@ def weekly(d, token):
                                 "emoji": True
                             },
                             "value": "open_paper",
-                            "url": "https://trypaper.io?ref=open_paper",
+                            "url": "https://pulse.trypaper.io?ref=slack_alert",
                             "action_id": "open_paper"
                         },
                         {
@@ -154,7 +154,7 @@ def weekly(d, token):
                                 "emoji": True
                             },
                             "value": "set_goals",
-                            "url": "https://trypaper.io?ref=set_goals",
+                            "url": "https://pulse.trypaper.io?ref=set_goals",
                             "action_id": "set_goals"
                         }
                     ]
@@ -206,7 +206,7 @@ def customerAlert(d, token):
                                 "emoji": True
                             },
                             "value": "open_paper",
-                            "url": "https://trypaper.io?ref=open_paper",
+                            "url": "https://pulse.trypaper.io?ref=slack_alert",
                             "action_id": "open_paper"
                         },
                         {
@@ -217,7 +217,7 @@ def customerAlert(d, token):
                                 "emoji": True
                             },
                             "value": "set_goals",
-                            "url": "https://trypaper.io?ref=set_goals",
+                            "url": "https://pulse.trypaper.io?ref=set_goals",
                             "action_id": "set_goals"
                         }
                     ]
@@ -269,7 +269,7 @@ def churnAlert(d, token):
                                 "emoji": True
                             },
                             "value": "open_paper",
-                            "url": "https://pulse.trypaper.io?ref=open_paper",
+                            "url": "https://pulse.trypaper.io?ref=slack_alert",
                             "action_id": "open_paper"
                         },
                         {
