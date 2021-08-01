@@ -11,6 +11,22 @@ def getDbt():
         logger.info(f'getDbt: {d}')
     return d
 
+def getCols(sql, cols):
+    cols2 = []
+    for col in cols:
+        # import pdb; pdb.set_trace()
+        colFormat = [s for s in sql['selected'] if s['alias'] == col]
+        if colFormat:
+            colFormat = colFormat[0].get('format', False)
+        else:
+            colFormat = False
+        col2 = {
+            'name': col,
+            'format': colFormat
+            }
+        cols2.append(col2)
+    return cols2
+
 def runDbt(teamId):
     logger.info(f"run_dbt user: {teamId}")
     os.environ['PAPER_DBT_SCHEMA'] = f"team_{teamId}"

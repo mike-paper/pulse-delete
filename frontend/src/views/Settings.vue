@@ -1,8 +1,8 @@
 <template>
   <div>
-    <div v-if="!storeState.gotUserData">
+    <div v-if="!storeState.gotUserData || !storeState.user.settings">
       <div class="flex justify-center space-y-8 w-full pt-32">
-        <svg class="animate-spin -ml-1 mr-3 h-20 w-20 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <svg class="animate-spin -ml-1 mr-3 h-20 w-20 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
@@ -10,11 +10,11 @@
     </div>
     <div v-else>
       <div class="pt-8 pl-8 mr-8">
-        <div class="text-3xl font-extrabold text-gray-900">
+        <div class="text-3xl font-extrabold text-gray-100">
           Settings
         </div>
         <div v-if="storeState.user.hasStripe" class="pt-8">
-          <div class="font-medium leading-6 text-gray-900 text-lg">
+          <div class="font-medium leading-6 text-gray-100 text-lg">
             Notifications
           </div>
           <p class="max-w-2xl text-sm text-gray-500">
@@ -36,7 +36,7 @@
               Alerts (New Subscribers, Churn, etc.)
             </div>
             <div>
-              <Switch v-model="storeState.user.settings.notifications.alerts.slack" :class="[storeState.user.settings.notifications.alerts.slack ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500']">
+              <Switch v-model="storeState.user.settings.notifications.alerts.slack" :class="[storeState.user.settings.notifications.alerts.slack ? 'bg-blue-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500']">
                 <span :class="[storeState.user.settings.notifications.alerts.slack ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']">
                   <span :class="[storeState.user.settings.notifications.alerts.slack ? 'opacity-0 ease-out duration-100' : 'opacity-100 ease-in duration-200', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
                     <svg class="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 12 12">
@@ -44,7 +44,7 @@
                     </svg>
                   </span>
                   <span :class="[storeState.user.settings.notifications.alerts.slack ? 'opacity-100 ease-in duration-200' : 'opacity-0 ease-out duration-100', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
-                    <svg class="h-3 w-3 text-indigo-600" fill="currentColor" viewBox="0 0 12 12">
+                    <svg class="h-3 w-3 text-blue-600" fill="currentColor" viewBox="0 0 12 12">
                       <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z" />
                     </svg>
                   </span>
@@ -52,7 +52,7 @@
               </Switch>
             </div>
             <div>
-              <Switch v-model="storeState.user.settings.notifications.alerts.email" :class="[storeState.user.settings.notifications.alerts.email ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500']">
+              <Switch v-model="storeState.user.settings.notifications.alerts.email" :class="[storeState.user.settings.notifications.alerts.email ? 'bg-blue-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500']">
                 <span :class="[storeState.user.settings.notifications.alerts.email ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']">
                   <span :class="[storeState.user.settings.notifications.alerts.email ? 'opacity-0 ease-out duration-100' : 'opacity-100 ease-in duration-200', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
                     <svg class="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 12 12">
@@ -60,7 +60,7 @@
                     </svg>
                   </span>
                   <span :class="[storeState.user.settings.notifications.alerts.email ? 'opacity-100 ease-in duration-200' : 'opacity-0 ease-out duration-100', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
-                    <svg class="h-3 w-3 text-indigo-600" fill="currentColor" viewBox="0 0 12 12">
+                    <svg class="h-3 w-3 text-blue-600" fill="currentColor" viewBox="0 0 12 12">
                       <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z" />
                     </svg>
                   </span>
@@ -73,7 +73,7 @@
               Weekly
             </div>
             <div>
-              <Switch v-model="storeState.user.settings.notifications.weekly.slack" :class="[storeState.user.settings.notifications.weekly.slack ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500']">
+              <Switch v-model="storeState.user.settings.notifications.weekly.slack" :class="[storeState.user.settings.notifications.weekly.slack ? 'bg-blue-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500']">
                 <span :class="[storeState.user.settings.notifications.weekly.slack ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']">
                   <span :class="[storeState.user.settings.notifications.weekly.slack ? 'opacity-0 ease-out duration-100' : 'opacity-100 ease-in duration-200', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
                     <svg class="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 12 12">
@@ -81,7 +81,7 @@
                     </svg>
                   </span>
                   <span :class="[storeState.user.settings.notifications.weekly.slack ? 'opacity-100 ease-in duration-200' : 'opacity-0 ease-out duration-100', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
-                    <svg class="h-3 w-3 text-indigo-600" fill="currentColor" viewBox="0 0 12 12">
+                    <svg class="h-3 w-3 text-blue-600" fill="currentColor" viewBox="0 0 12 12">
                       <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z" />
                     </svg>
                   </span>
@@ -89,7 +89,7 @@
               </Switch>
             </div>
             <div>
-              <Switch v-model="storeState.user.settings.notifications.weekly.email" :class="[storeState.user.settings.notifications.weekly.email ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500']">
+              <Switch v-model="storeState.user.settings.notifications.weekly.email" :class="[storeState.user.settings.notifications.weekly.email ? 'bg-blue-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500']">
                 <span :class="[storeState.user.settings.notifications.weekly.email ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']">
                   <span :class="[storeState.user.settings.notifications.weekly.email ? 'opacity-0 ease-out duration-100' : 'opacity-100 ease-in duration-200', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
                     <svg class="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 12 12">
@@ -97,7 +97,7 @@
                     </svg>
                   </span>
                   <span :class="[storeState.user.settings.notifications.weekly.email ? 'opacity-100 ease-in duration-200' : 'opacity-0 ease-out duration-100', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
-                    <svg class="h-3 w-3 text-indigo-600" fill="currentColor" viewBox="0 0 12 12">
+                    <svg class="h-3 w-3 text-blue-600" fill="currentColor" viewBox="0 0 12 12">
                       <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z" />
                     </svg>
                   </span>
@@ -110,7 +110,7 @@
               Monthly
             </div>
             <div>
-              <Switch v-model="storeState.user.settings.notifications.monthly.slack" :class="[storeState.user.settings.notifications.monthly.slack ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500']">
+              <Switch v-model="storeState.user.settings.notifications.monthly.slack" :class="[storeState.user.settings.notifications.monthly.slack ? 'bg-blue-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500']">
                 <span :class="[storeState.user.settings.notifications.monthly.slack ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']">
                   <span :class="[storeState.user.settings.notifications.monthly.slack ? 'opacity-0 ease-out duration-100' : 'opacity-100 ease-in duration-200', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
                     <svg class="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 12 12">
@@ -118,7 +118,7 @@
                     </svg>
                   </span>
                   <span :class="[storeState.user.settings.notifications.monthly.slack ? 'opacity-100 ease-in duration-200' : 'opacity-0 ease-out duration-100', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
-                    <svg class="h-3 w-3 text-indigo-600" fill="currentColor" viewBox="0 0 12 12">
+                    <svg class="h-3 w-3 text-blue-600" fill="currentColor" viewBox="0 0 12 12">
                       <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z" />
                     </svg>
                   </span>
@@ -126,7 +126,7 @@
               </Switch>
             </div>
             <div>
-              <Switch v-model="storeState.user.settings.notifications.monthly.email" :class="[storeState.user.settings.notifications.monthly.email ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500']">
+              <Switch v-model="storeState.user.settings.notifications.monthly.email" :class="[storeState.user.settings.notifications.monthly.email ? 'bg-blue-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500']">
                 <span :class="[storeState.user.settings.notifications.monthly.email ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']">
                   <span :class="[storeState.user.settings.notifications.monthly.email ? 'opacity-0 ease-out duration-100' : 'opacity-100 ease-in duration-200', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
                     <svg class="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 12 12">
@@ -134,7 +134,7 @@
                     </svg>
                   </span>
                   <span :class="[storeState.user.settings.notifications.monthly.email ? 'opacity-100 ease-in duration-200' : 'opacity-0 ease-out duration-100', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
-                    <svg class="h-3 w-3 text-indigo-600" fill="currentColor" viewBox="0 0 12 12">
+                    <svg class="h-3 w-3 text-blue-600" fill="currentColor" viewBox="0 0 12 12">
                       <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z" />
                     </svg>
                   </span>
@@ -144,14 +144,14 @@
           </div>
         </div>
         <div class="pt-8">
-          <div class="font-medium leading-6 text-gray-900 text-lg">
+          <div class="font-medium leading-6 text-gray-100 text-lg">
             Stripe
           </div>
           <p class="max-w-2xl text-sm text-gray-500">
             Import your Stripe data by 
               <a 
                 href="https://dashboard.stripe.com/apikeys/create"
-                class="font-medium text-indigo-600 hover:text-indigo-500"
+                class="font-medium text-blue-600 hover:text-blue-500"
                 target="_blank"
               >
                 creating a key here.
@@ -162,7 +162,7 @@
             class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4"
           >
             <div class="col-span-6 sm:col-span-2">
-              <label for="stripe_api_key" class="block text-sm font-medium text-gray-700">API Key</label>
+              <label for="stripe_api_key" class="block text-sm font-medium text-gray-100">API Key</label>
               <input 
                 type="password" 
                 v-model="stripeApiKey"
@@ -170,14 +170,14 @@
                 name="stripe_api_key" 
                 id="stripe_api_key" 
                 autocomplete="password" 
-                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-gray-900 focus:border-gray-900 sm:text-sm" 
+                class="mt-1 block w-full border border-gray-900 text-gray-100 bg-gray-800 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-gray-900 focus:border-gray-200 sm:text-sm" 
               />
             </div>
             <div class="col-span-6 sm:col-span-2">
               <button 
                 @click="updateStripeApiKey"
                 :disabled="updatingStripeKey"
-                class="py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 shadow-sm hover:bg-indigo-500 focus:outline-none focus:shadow-outline-blue focus:bg-indigo-500 active:bg-indigo-600 transition duration-150 ease-in-out"
+                class="py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 shadow-sm hover:bg-blue-500 focus:outline-none focus:shadow-outline-blue focus:bg-blue-500 active:bg-blue-600 transition duration-150 ease-in-out"
                 :class="{
                   'opacity-50': updatingStripeKey, 
                   'cursor-not-allowed': updatingStripeKey
@@ -193,19 +193,19 @@
           
         </div>
         <div v-if="storeState.user.hasStripe" class="pt-8">
-          <div class="font-medium leading-6 text-gray-900 text-lg">
+          <div class="font-medium leading-6 text-gray-100 text-lg">
             Data
           </div>
           <p class="max-w-2xl text-sm text-gray-500">
             View and edit your data model and syncing schedule
           </p>
           <div class="pt-8">
-            <div class="font-medium leading-6 text-gray-900">
-              Raw objects
+            <div class="font-medium leading-6 text-gray-100">
+              Raw Objects
             </div>
-            <div class="mt-4 shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+            <div class="mt-4 shadow overflow-hidden rounded">
+              <table class="border border-gray-700 min-w-full">
+                <thead class="bg-gray-800 border border-gray-700">
                   <tr>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Name
@@ -218,32 +218,33 @@
                     </th>
                   </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="divide-y divide-gray-700 bg-gray-800">
                   <tr
                     v-for="(job, jobId, jobIndex) in storeState.jobStatuses"
                     :key="jobIndex"
+                    class="bg-gray-800 text-gray-100"
                   >
                     <template v-if="job.count">
                       <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
                           <div class="ml-0">
-                            <div class="text-sm font-medium text-gray-900">
+                            <div class="text-sm font-medium text-gray-100">
                               {{ job.obj }}
                             </div>
                           </div>
                         </div>
                       </td>
                       <td class="px-6 py-4 whitespace-nowrap">
-                        <span v-if="job.status === 'running'" class="px-2 -ml-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                        <span v-if="job.status === 'running'" class="px-2 -ml-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-600 text-yellow-200">
                           {{ job.status }}
                         </span>
-                        <span v-else class="px-2 -ml-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                        <span v-else class="px-2 -ml-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-700 text-green-200">
                           {{ job.status }}
                         </span>
                         <div v-if="job.status === 'running'" class="whitespace-nowrap text-sm text-gray-500">
                           ...
                         </div>
-                        <div v-else class="whitespace-nowrap text-sm text-gray-500">
+                        <div v-else class="whitespace-nowrap text-sm text-gray-500 inline ml-3">
                           Updated {{ job.rows }} rows 
                           <span v-if="job.updated_on">
                             {{ timeSince(job.updated_on*1000) }} ago
@@ -262,12 +263,12 @@
             </div>
           </div>
           <div class="pt-8">
-            <div class="font-medium leading-6 text-gray-900">
+            <div class="font-medium leading-6 text-gray-100">
               Modeled Data (dbt)
             </div>
-            <div class="mt-4 shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+            <div class="mt-4 shadow overflow-hidden rounded">
+              <table class="border border-gray-700 min-w-full">
+                <thead class="bg-gray-800 border border-gray-700">
                   <tr>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Name
@@ -278,12 +279,12 @@
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Rows
                     </th>
-                    <th scope="col" class="relative px-6 py-3">
+                    <!-- <th scope="col" class="relative px-6 py-3">
                       <span class="sr-only">Edit</span>
-                    </th>
+                    </th> -->
                   </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="divide-y divide-gray-700 bg-gray-800">
                   <tr
                     v-for="(table, tableIndex) in storeState.dbt.models"
                     :key="tableIndex"
@@ -291,31 +292,42 @@
                     <td class="px-6 py-4 whitespace-nowrap">
                       <div class="flex items-center">
                         <div class="ml-0">
-                          <div class="text-sm font-medium text-gray-900">
+                          <div class="text-sm font-medium text-gray-100">
                             {{ table.name }}
                           </div>
                         </div>
                       </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                      <span v-if="runningDbt" class="px-2 -ml-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                      <span v-if="runningDbt" class="px-2 -ml-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-600 text-yellow-200">
                         running
                       </span>
-                      <span v-else class="px-2 -ml-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                      <span v-else class="px-2 -ml-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-700 text-green-200">
                         complete
                       </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {{ table.count }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <a 
                         @click="viewTable(table)" 
-                        class="text-indigo-600 hover:text-indigo-900 cursor-pointer"
+                        class="text-blue-600 hover:text-blue-400 cursor-pointer"
+                      >
+                        <span v-if="table.count">
+                          {{ table.count }}
+                        </span>
+                        <span v-else>
+                          View
+                        </span>
+                      </a>  
+                      
+                    </td>
+                    <!-- <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <a 
+                        @click="viewTable(table)" 
+                        class="text-blue-600 hover:text-blue-400 cursor-pointer"
                       >
                         View
                       </a>
-                    </td>
+                    </td> -->
                   </tr>
                 </tbody>
               </table>
@@ -325,7 +337,7 @@
             <button 
               @click="runDbt"
               :disabled="runningDbt"
-              class="py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 shadow-sm hover:bg-indigo-500 focus:outline-none focus:shadow-outline-blue focus:bg-indigo-500 active:bg-indigo-600 transition duration-150 ease-in-out"
+              class="py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 shadow-sm hover:bg-blue-500 focus:outline-none focus:shadow-outline-blue focus:bg-blue-500 active:bg-blue-600 transition duration-150 ease-in-out"
               :class="{
                 'opacity-50': runningDbt, 
                 'cursor-not-allowed': runningDbt
@@ -336,14 +348,14 @@
           </div>
         </div>
         <div class="pt-8">
-          <div class="font-medium leading-6 text-gray-900 text-lg">
+          <div class="font-medium leading-6 text-gray-100 text-lg">
             Sheets
           </div>
           <p class="max-w-2xl text-sm text-gray-500">
             Get your SaaS metrics in Google Sheets
               <a 
                 href="https://developers.google.com/sheets/api/guides/authorizing#APIKey"
-                class="font-medium text-indigo-600 hover:text-indigo-500"
+                class="font-medium text-blue-600 hover:text-blue-500"
                 target="_blank"
               >
               (see here to get a key)
@@ -353,7 +365,7 @@
             class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4"
           >
             <div class="col-span-6 sm:col-span-2">
-              <label for="sheets_creds" class="block text-sm font-medium text-gray-700">Sheets Credentials</label>
+              <label for="sheets_creds" class="block text-sm font-medium text-gray-100">Sheets Credentials</label>
               <input 
                 type="password" 
                 v-model="sheetsCreds"
@@ -361,13 +373,13 @@
                 name="sheets_creds" 
                 id="sheets_creds" 
                 autocomplete="password" 
-                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-gray-900 focus:border-gray-900 sm:text-sm" 
+                class="mt-1 block w-full border text-gray-100 bg-gray-800 border-gray-900 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-gray-900 focus:border-gray-100 sm:text-sm" 
               />
             </div>
           </div>
         </div>
         <div class="pt-8">
-          <div class="font-medium leading-6 text-gray-900 text-lg">
+          <div class="font-medium leading-6 text-gray-100 text-lg">
             Slack
           </div>
           <p class="max-w-2xl text-sm text-gray-500">
@@ -389,7 +401,7 @@
           >
             <div class="col-span-6 sm:col-span-2">
               <div>
-                <label for="price" class="block text-sm font-medium text-gray-700">Channel</label>
+                <label for="price" class="block text-sm font-medium text-gray-100">Channel</label>
                 <div class="mt-1 relative rounded-md shadow-sm">
                   <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <span class="text-gray-500 sm:text-sm">
@@ -402,7 +414,7 @@
                     autocomplete="password" 
                     v-model="storeState.user.settings.notifications.slackChannel"
                     id="slackChannel" 
-                    class="pl-6 mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-gray-900 focus:border-gray-900 sm:text-sm" 
+                    class="pl-6 mt-1 block w-full border text-gray-100 bg-gray-800 border-gray-900 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-gray-900 focus:border-gray-100 sm:text-sm" 
                     placeholder="channel-name" 
                   />
                 </div>
@@ -437,7 +449,6 @@ import SSF from 'ssf'
 // import PaperSelect from '@/components/PaperSelect.vue'
 
 import { Grid, html } from "gridjs";
-import "gridjs/dist/theme/mermaid.css";
 
 import { 
   ArrowSmUpIcon, 
@@ -520,7 +531,7 @@ export default {
       // columns: ["Name", "Email", "Phone Number"],
       data: [],
       className: {
-        td: 'px-6 py-4 whitespace-nowrap text-sm text-gray-900 divide-y divide-gray-200',
+        td: 'px-6 py-4 whitespace-nowrap text-sm text-gray-100 divide-y divide-gray-200',
         th: 'px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 tracking-wider',
         table: 'min-w-full divide-gray-200',
         tbody: 'bg-white '
@@ -744,7 +755,7 @@ export default {
           Go to your 
           <a 
             href="https://dashboard.stripe.com/apikeys/create"
-            class="font-medium text-indigo-600 hover:text-indigo-500"
+            class="font-medium text-blue-600 hover:text-blue-500"
             target="_blank"
           >
             dashboard
@@ -953,7 +964,7 @@ export default {
           ["Afshin", "afshin@mail.com", "(353) 22 87 8356"]
         ],
         className: {
-          td: 'px-6 py-4 whitespace-nowrap text-sm text-gray-900 divide-y divide-gray-200',
+          td: 'px-6 py-4 whitespace-nowrap text-sm text-gray-100 divide-y divide-gray-200',
           th: 'px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider',
           table: 'min-w-full divide-gray-200',
           tbody: 'bg-white '

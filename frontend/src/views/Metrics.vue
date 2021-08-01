@@ -1,8 +1,8 @@
 <template>
-  <div>
+  <div class="bg-gray-900">
     <div v-if="!storeState.gotMetrics">
       <div class="flex justify-center space-y-8 w-full pt-32">
-        <svg class="animate-spin -ml-1 mr-3 h-20 w-20 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <svg class="animate-spin -ml-1 mr-3 h-20 w-20 text-gray-100" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
@@ -14,13 +14,13 @@
           vega
         </div> -->
         <!-- This example requires Tailwind CSS v2.0+ -->
-        <dl class="mt-5 grid grid-cols-1 bg-white overflow-hidden shadow divide-y divide-gray-200 md:grid-cols-3 md:divide-y-0 md:divide-x">
+        <dl class="mt-5 grid grid-cols-1 bg-gray-900 overflow-hidden divide-y divide-gray-800 md:grid-cols-3 md:divide-y-0 md:divide-x">
           <div class="px-4 py-5 sm:p-6 hover:shadow-lg">
-            <dt class="text-base font-normal text-gray-900">
+            <dt class="text-base font-normal text-gray-500">
               MRR
             </dt>
             <dd class="mt-1 flex justify-between items-baseline md:block lg:flex">
-              <div class="flex items-baseline text-2xl font-semibold text-gray-900">
+              <div @click="drillDown('mrr')" class="flex items-baseline text-4xl font-semibold text-gray-100 cursor-pointer">
                 ${{(storeState.metricData.summary[2].mrr/1000).toFixed(1)}}k
                 <span class="ml-2 text-sm font-medium text-gray-500"> 
                   from ${{(storeState.metricData.summary[1].mrr/1000).toFixed(1)}}k
@@ -36,11 +36,11 @@
             </dd>
           </div>
           <div class="px-4 py-5 sm:p-6 hover:shadow-lg">
-            <dt class="text-base font-normal text-gray-900">
+            <dt class="text-base font-normal text-gray-500">
               Customers
             </dt>
             <dd class="mt-1 flex justify-between items-baseline md:block lg:flex">
-              <div class="flex items-baseline text-2xl font-semibold text-gray-900">
+              <div class="flex items-baseline text-4xl font-semibold text-gray-100">
                 {{Math.round(storeState.metricData.summary[2].active)}}
                 <span class="ml-2 text-sm font-medium text-gray-500"> 
                   from {{Math.round(storeState.metricData.summary[1].active)}}
@@ -56,11 +56,11 @@
             </dd>
           </div>
           <div class="px-4 py-5 sm:p-6 hover:shadow-lg">
-            <dt class="text-base font-normal text-gray-900">
+            <dt class="text-base font-normal text-gray-500">
               Churn
             </dt>
             <dd class="mt-1 flex justify-between items-baseline md:block lg:flex">
-              <div class="flex items-baseline text-2xl font-semibold text-gray-900">
+              <div class="flex items-baseline text-4xl font-semibold text-gray-100">
                 ${{(storeState.metricData.summary[2].churned_mrr/1000).toFixed(1)}}k
                 <span class="ml-2 text-sm font-medium text-gray-500"> 
                   from ${{(storeState.metricData.summary[1].churned_mrr/1000).toFixed(1)}}k
@@ -77,7 +77,7 @@
           </div>
         </dl>
         <div 
-          class="grid bg-white overflow-hidden shadow divide-y divide-gray-200 md:grid-cols-3 md:divide-y-0 md:divide-x"
+          class="grid bg-gray-900 overflow-hidden divide-y divide-gray-800 md:grid-cols-3 md:divide-y-0 md:divide-x"
         >
           <div 
             id="mrr" 
@@ -101,10 +101,10 @@
         <SwitchGroup as="div" class="flex items-center">
           <Switch v-model="tableFilters.active" :class="[tableFilters.active ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500']">
             <span class="sr-only">Use setting</span>
-            <span aria-hidden="true" :class="[tableFilters.active ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']" />
+            <span aria-hidden="true" :class="[tableFilters.active ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-5 w-5 rounded-full bg-gray-900 shadow transform ring-0 transition ease-in-out duration-200']" />
           </Switch>
           <SwitchLabel as="span" class="ml-3 mr-4">
-            <span class="text-sm font-medium text-gray-900">Active only</span>
+            <span class="text-sm font-medium text-gray-100">Active only</span>
           </SwitchLabel>
         </SwitchGroup>
       </div> -->
@@ -127,7 +127,7 @@ import * as vega from "vega";
 // embed = require('vega-embed')
 
 import { Grid, html } from "gridjs";
-import "gridjs/dist/theme/mermaid.css";
+// import "gridjs/dist/theme/mermaid.css";
 
 import { ArrowSmUpIcon, ArrowSmDownIcon } from '@heroicons/vue/solid'
 
@@ -205,10 +205,10 @@ export default {
       ],
       data: [],
       className: {
-        td: 'px-6 py-4 whitespace-nowrap text-sm text-gray-900 divide-y divide-gray-200',
+        td: 'px-6 py-4 whitespace-nowrap text-sm text-gray-100 divide-y divide-gray-200',
         th: 'px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 tracking-wider',
         table: 'min-w-full divide-gray-200',
-        tbody: 'bg-white '
+        tbody: 'bg-gray-900 '
       }
     })
     // window.vegaEmbed('#view', yourVlSpec);
@@ -220,12 +220,12 @@ export default {
     this.emitter.on('got-metrics', d => {
       this.createCharts()
       var self = this
-      setTimeout(() => self.createCustomerTable(), 0);
+      // setTimeout(() => self.createCustomerTable(), 0);
     });
     if (this.storeState.gotMetrics) {
       this.createCharts()
       var self = this
-      setTimeout(() => self.createCustomerTable(), 0);
+      // setTimeout(() => self.createCustomerTable(), 0);
     }
     // this.startTyped()
   },
@@ -261,18 +261,18 @@ export default {
             "guide-title": {"font": "Inter, sans-serif", "fontSize": 12},
             "group-title": {"font": "Inter, sans-serif", "fontSize": 12}
           },
-          "title": {
-            "font": "Inter, sans-serif",
-            "fontSize": 14,
-            "fontWeight": "bold",
-            "dy": -3,
-            "anchor": "start"
-          },
+          // "title": {
+          //   "font": "Inter, sans-serif",
+          //   "fontSize": 14,
+          //   "fontWeight": "bold",
+          //   "dy": -3,
+          //   "anchor": "start"
+          // },
           "axis": {
-            "gridColor": "#ccc",
-            "tickColor": "#fff",
+            "gridColor": "#f7fafc",
+            "tickColor": "transparent",
+            "labelColor": "#f7fafc",
             "domain": false,
-            "grid": false
           }
         },
         vegaSpec: {
@@ -283,38 +283,12 @@ export default {
             "type": "line", 
             "tooltip": false, 
             "fill": null, 
-            "stroke": "#010101",
-            "point": {"color": "#010101"},
+            "stroke": "#9ae6b4",
+            "point": {"color": "#9ae6b4"},
             },
           "encoding": {
-              "x": {
-                "field": "mrr_month_dt", 
-                "timeUnit": "yearmonth", 
-                "title": null,
-                // "axis": {"tickCount": {"interval": "month", "step": 6}}
-                "axis": {
-                  "values": [
-                    {"year": 2019, "month": "may", "date": 1},
-                    {"year": 2021, "month": "may", "date": 1}
-                    ]
-                  }
-                },
-              "y": {
-                "field": "mrr", 
-                "aggregate": "sum", 
-                "type": "quantitative",
-                "title": null
-                },
-              "tooltip": [
-                  {"field": "mrr_month_dt", "timeUnit": "yearmonth", "title": "Date"},
-                  {
-                    "field": "mrr", 
-                    "aggregate": "sum", 
-                    "type": "quantitative",
-                    "format": "$,.0f",
-                    "title": "MRR"
-                  }
-              ]
+              "x": {},
+              "y": {},
           },
           data: {values: []},
         },
@@ -326,6 +300,9 @@ export default {
     },
     logout() {
       this.$router.push({ name: 'Logout', query: { goto: 'Landing' }})
+    },
+    drillDown(drillOn) {
+      this.$router.push({ name: 'Analyze', query: { drill: drillOn}})
     },
     goToAnalyze() {
       this.$router.push({ name: 'Analyze', query: { uuid: 'mrrchart' }})
@@ -343,10 +320,10 @@ export default {
           ["Afshin", "afshin@mail.com", "(353) 22 87 8356"]
         ],
         className: {
-          td: 'px-6 py-4 whitespace-nowrap text-sm text-gray-900 divide-y divide-gray-200',
+          td: 'px-6 py-4 whitespace-nowrap text-sm text-gray-100 divide-y divide-gray-200',
           th: 'px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider',
           table: 'min-w-full divide-gray-200',
-          tbody: 'bg-white '
+          tbody: 'bg-gray-900 '
         }
       }).render(document.getElementById("testtable"));
     },
@@ -466,12 +443,132 @@ export default {
       let opts = {
         config: this.vegaConfig,
         actions: false,
+        tooltip: {theme: 'custom'},
         }
+      // let mrr = this.deepCopy(this.vegaSpec)
+      // mrr.data.values = this.storeState.metricData.data
+      // window.vegaEmbed('#mrr', mrr, opts);
       let mrr = this.deepCopy(this.vegaSpec)
       mrr.data.values = this.storeState.metricData.data
+      mrr.layer = [
+        {
+          "encoding": {
+            "color": {"value": "#9ae6b4"},
+            "y": {"field": "mrr", "type": "quantitative"}
+          },
+          "layer": [
+            {
+              "mark": "line", 
+              "color": "#9ae6b4",
+              "point": {"color": "#9ae6b4"},
+            },
+          ]
+        },
+        {
+          "mark": "rule",
+          "encoding": {
+            "opacity": {
+              "value": 0,
+            },
+            "tooltip": [
+                {"field": "mrr_month_dt", "timeUnit": "yearmonth", "title": "Date"},
+                {
+                  "field": "mrr", 
+                  "aggregate": "sum", 
+                  "type": "quantitative",
+                  "format": "$,.0f",
+                  "title": "MRR"
+                }
+            ]
+          },
+          "params": [{
+            "name": "hover",
+            "select": {
+              "type": "point",
+              "fields": ["mrr_month_dt"],
+              "nearest": true,
+              "on": "mouseover",
+              "clear": "mouseout"
+            }
+          }]
+        }
+      ]
+      mrr.encoding = {
+          "x": {
+            "field": "mrr_month_dt", 
+            "timeUnit": "yearmonth", 
+            "title": null,
+            "axis": {
+              "values": [
+                {"year": 2019, "month": "may", "date": 1},
+                {"year": 2021, "month": "may", "date": 1}
+                ],
+              "grid": false,
+              },
+              "labelColor": "#fff",
+              
+            },
+          "y": {
+            "field": "mrr", 
+            "aggregate": "sum", 
+            "type": "quantitative",
+            "title": null,
+            "grid": false,
+            "axis": {
+              "grid": true,
+              "gridOpacity": 0.2,
+              "gridDash": {
+                "value": [2, 2]
+              },
+            }
+          },
+      }
       window.vegaEmbed('#mrr', mrr, opts);
       let customers = this.deepCopy(this.vegaSpec)
       customers.data.values = this.storeState.metricData.data
+      customers.layer = [
+        {
+          "encoding": {
+            "color": {"value": "#9ae6b4"},
+            "y": {"field": "active", "type": "quantitative"}
+          },
+          "layer": [
+            {
+              "mark": "line", 
+              "color": "#9ae6b4",
+              "point": {"color": "#9ae6b4"},
+            },
+          ]
+        },
+        {
+          "mark": "rule",
+          "encoding": {
+            "opacity": {
+              "value": 0,
+            },
+            "tooltip": [
+                {"field": "mrr_month_dt", "timeUnit": "yearmonth", "title": "Date"},
+                {
+                  "field": "active", 
+                  "aggregate": "sum", 
+                  "type": "quantitative",
+                  "format": ",.0f",
+                  "title": "Customers"
+                }
+            ]
+          },
+          "params": [{
+            "name": "hover",
+            "select": {
+              "type": "point",
+              "fields": ["mrr_month_dt"],
+              "nearest": true,
+              "on": "mouseover",
+              "clear": "mouseout"
+            }
+          }]
+        }
+      ]
       customers.encoding = {
           "x": {
             "field": "mrr_month_dt", 
@@ -481,29 +578,73 @@ export default {
               "values": [
                 {"year": 2019, "month": "may", "date": 1},
                 {"year": 2021, "month": "may", "date": 1}
-                ]
-              }
+                ],
+              "grid": false,
+              },
+              "labelColor": "#fff",
+              
             },
           "y": {
             "field": "active", 
             "aggregate": "sum", 
             "type": "quantitative",
-            "title": null
-            },
-          "tooltip": [
-              {"field": "mrr_month_dt", "timeUnit": "yearmonth", "title": "Date"},
-              {
-                "field": "active", 
-                "aggregate": "sum", 
-                "type": "quantitative",
-                "format": ",.0f",
-                "title": "Customers"
-              }
-          ]
+            "title": null,
+            "grid": false,
+            "axis": {
+              "grid": true,
+              "gridOpacity": 0.2,
+              "gridDash": {
+                "value": [2, 2]
+              },
+            }
+          },
       }
       window.vegaEmbed('#customers', customers, opts);
       let churn = this.deepCopy(this.vegaSpec)
       churn.data.values = this.storeState.metricData.data
+      churn.layer = [
+        {
+          "encoding": {
+            "color": {"value": "#9ae6b4"},
+            "y": {"field": "churned_mrr", "type": "quantitative"}
+          },
+          "layer": [
+            {
+              "mark": "line", 
+              "color": "#9ae6b4",
+              "point": {"color": "#9ae6b4"},
+            },
+          ]
+        },
+        {
+          "mark": "rule",
+          "encoding": {
+            "opacity": {
+              "value": 0,
+            },
+            "tooltip": [
+                {"field": "mrr_month_dt", "timeUnit": "yearmonth", "title": "Date"},
+                {
+                  "field": "churned_mrr", 
+                  "aggregate": "sum", 
+                  "type": "quantitative",
+                  "format": "$,.0f",
+                  "title": "Customers"
+                }
+            ]
+          },
+          "params": [{
+            "name": "hover",
+            "select": {
+              "type": "point",
+              "fields": ["mrr_month_dt"],
+              "nearest": true,
+              "on": "mouseover",
+              "clear": "mouseout"
+            }
+          }]
+        }
+      ]
       churn.encoding = {
           "x": {
             "field": "mrr_month_dt", 
@@ -513,25 +654,26 @@ export default {
               "values": [
                 {"year": 2019, "month": "may", "date": 1},
                 {"year": 2021, "month": "may", "date": 1}
-                ]
-              }
+                ],
+              "grid": false,
+              },
+              "labelColor": "#fff",
+              
             },
           "y": {
             "field": "churned_mrr", 
             "aggregate": "sum", 
             "type": "quantitative",
-            "title": null
-            },
-          "tooltip": [
-              {"field": "mrr_month_dt", "timeUnit": "yearmonth", "title": "Date"},
-              {
-                "field": "churned_mrr", 
-                "aggregate": "sum", 
-                "type": "quantitative",
-                "format": "$,.0f",
-                "title": "Churn"
-              }
-          ]
+            "title": null,
+            "grid": false,
+            "axis": {
+              "grid": true,
+              "gridOpacity": 0.2,
+              "gridDash": {
+                "value": [2, 2]
+              },
+            }
+          },
       }
       window.vegaEmbed('#churn', churn, opts);
     },
@@ -616,17 +758,15 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style>
-  .gridjs-tbody {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-    line-height: 1.5;
-    --border-opacity: 1;
-    border-collapse: collapse;
-    box-sizing: border-box;
-    border-width: 1px !important;
-    border-style: solid;
-    --bg-opacity: 1;
-    background-color: rgba(255, 255, 255, var(--bg-opacity));
-    --divide-opacity: 1;
-    border-color: rgba(237, 242, 247, var(--divide-opacity));
+  #vg-tooltip-element.vg-tooltip.custom-theme {
+    color: #f7fafc;
+  }
+  #vg-tooltip-element table tr td.key {
+    color: #718096;
+  }
+  #vg-tooltip-element {
+    background-color: #2d3748;
+    color: #f7fafc;
+    border: none;
   }
 </style>

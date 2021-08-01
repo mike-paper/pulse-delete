@@ -20,9 +20,9 @@ PAPER_DO_NOT_START_SCHEDULER = int(os.environ.get('PAPER_DO_NOT_START_SCHEDULER'
 
 
 def startScheduler(engine):
-    logger.info(f'startScheduler... {PAPER_DO_NOT_START_SCHEDULER}')
+    logger.info(f'startScheduler? {(not PAPER_DO_NOT_START_SCHEDULER)}')
     if PAPER_DO_NOT_START_SCHEDULER:
-        runWeekly()
+        # runWeekly()
         logger.info(f'not starting scheduler...')
         return False
     scheduler = False
@@ -54,12 +54,8 @@ def startScheduler(engine):
     checkQueueJob = scheduler.add_job(checkQueue, trigger='interval', seconds=60)
     # testSchedJob = scheduler.add_job(testSched, trigger='interval', seconds=10)
     hourlyJob = scheduler.add_job(func=runHourly, trigger='cron', minute=45, second=30)
+    weeklyJob = scheduler.add_job(func=runWeekly, kwargs={'engine': engine}, trigger='cron', day_of_week='mon', hour=8, minute=30, second=0)
     return True
-    # runHourly()
-    # runWeekly()
-    # hourlyJob = scheduler.add_job(runHourly, trigger='interval', seconds=10)
-    # weeklyJob = scheduler.add_job(func=runWeekly, kwargs={'engine': engine}, trigger='cron', day_of_week='mon', hour=8, minute=30, second=0)
-    # monthlyJob = scheduler.add_job(func=runMonthly, kwargs={'engine': engine}, trigger='cron', day=1, hour=8, minute=30, second=0)
     
     
 

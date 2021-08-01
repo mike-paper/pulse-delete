@@ -4660,12 +4660,12 @@ graceful-fs@^4.1.11, graceful-fs@^4.1.15, graceful-fs@^4.1.2, graceful-fs@^4.1.6
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.2.4.tgz"
   integrity sha512-WjKPNJF79dtJAVniUlGGWHYGz2jWxT6VhN/4m1NdkbZ2nOsEF+cI1Edgql5zCRhs/VsQYRvrXctxktVXZUkixw==
 
-gridjs@^3.1.0:
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/gridjs/-/gridjs-3.1.0.tgz"
-  integrity sha512-QIxWUZ3avjBtE8n/3IPdhowgHI4Tjp5HuhYGU91RF4JQla0LvIVNl6DVSWlSWIsYJkGrC7jpenPjeZZ5ULbpQw==
+gridjs@^5.0.0:
+  version "5.0.2"
+  resolved "https://registry.yarnpkg.com/gridjs/-/gridjs-5.0.2.tgz#27c4bd7399d07770e68b45bcca20c3b1fea828b6"
+  integrity sha512-7EaMc4/IhqRcSbdOYvHOlHETciWmbbhMU6rDr2e0UfzIXSkb7X3Lhf9+bGv+v4JaWnJW5GBillgIIHrAvIIoFg==
   dependencies:
-    preact "^10.5.7"
+    preact "^10.5.12"
     tslib "^2.0.1"
 
 gzip-size@^5.0.0:
@@ -7297,10 +7297,10 @@ postcss@^8.1.6, postcss@^8.2.1, postcss@^8.2.6:
     nanoid "^3.1.20"
     source-map "^0.6.1"
 
-preact@^10.5.7:
-  version "10.5.7"
-  resolved "https://registry.yarnpkg.com/preact/-/preact-10.5.7.tgz"
-  integrity sha512-4oEpz75t/0UNcwmcsjk+BIcDdk68oao+7kxcpc1hQPNs2Oo3ZL9xFz8UBf350mxk/VEdD41L5b4l2dE3Ug3RYg==
+preact@^10.5.12:
+  version "10.5.14"
+  resolved "https://registry.yarnpkg.com/preact/-/preact-10.5.14.tgz#0b14a2eefba3c10a57116b90d1a65f5f00cd2701"
+  integrity sha512-KojoltCrshZ099ksUZ2OQKfbH66uquFoxHSbnwKbTJHeQNvx42EmC7wQVWNuDt6vC5s3nudRHFtKbpY4ijKlaQ==
 
 prelude-ls@~1.1.2:
   version "1.1.2"

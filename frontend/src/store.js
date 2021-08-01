@@ -35,6 +35,8 @@ export const store = {
       jobStatuses: {},
       analysis: {
         uuid: false,
+        mode: 'search',
+        code: 'select *\nfrom customers as c',
         results: {
           rows: [],
           cols: [],

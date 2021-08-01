@@ -71,6 +71,9 @@ def checkForTeam(engine, email, userId):
         teamId = pints.postgres.insertTeam(engine, domain)
         teamMembershipId = pints.postgres.insertTeamMember(engine, teamId, userId)
         logger.info(f'adding user to team {teamId}...')
+        pints.postgres.insertTeamMember(engine, teamId, userId)
+        dbUser = pints.postgres.createReadOnlyUser(engine, teamId)
+        logger.info(f'dbUser user {dbUser}...')
     return True
 
 # with app.app_context():
@@ -97,6 +100,9 @@ def checkForTeam(engine, email, userId):
 # testStripe = pints.scheduler.testSched()
 # slackInfo = pints.postgres.getSlackInfo(db.engine, 5)
 # pints.slack.testPush({'msg': 'in summerrrrrr!!!!'}, slackInfo['bot_token'])
+
+testUser = pints.postgres.createReadOnlyUser(db.engine, 5)
+logger.info(f'testUser: {testUser}')
 
 @app.route('/ping', methods=["GET"])
 def ping():
@@ -144,10 +150,20 @@ def run_analysis():
     data = flask.request.get_json()
     user = getUser(data)
     logger.info(f'run_analysis: {data}')
-    sql = pints.yaml2sql.dbt2Sql(data['dbt'], f"team_{user['team_id']}_stripe")
+    if data['analysis']['mode'] == 'search':
+        dbtModel = pints.yaml2sql.dbt2Sql(data['dbt'], f"team_{user['team_id']}_stripe")
+        sql = dbtModel['sql']
+        userEngine = db.engine
+    else:
+        sql = data['analysis']['code']
+        userPass = os.environ.get('PAPER_READONLY_PASSWORD')
+        db_url = f"postgresql://team_{user['team_id']}_readonly:{userPass}@oregon-postgres.render.com/paperdb"
+        # logger.info(f'db_url: {db_url}')
+        userEngine = sqlalchemy.create_engine(db_url, connect_args={'options': f"-csearch_path=team_{user['team_id']}_stripe"})
     logger.info(f'run_analysis sql: {sql}')
+    
     try:
-        df = pd.read_sql(sql['sql'], db.engine)
+        df = pd.read_sql(sql, userEngine)
     except Exception as e:
         logger.error(f'run_analysis error: {e}')
         return {
@@ -157,19 +173,11 @@ def run_analysis():
         }
     logger.info(f'run_analysis df: {df.head()}')
     cols = df.columns.tolist()
-    cols2 = []
-    for col in cols:
-        # import pdb; pdb.set_trace()
-        colFormat = [s for s in sql['selected'] if s['alias'] == col]
-        if colFormat:
-            colFormat = colFormat[0].get('format', False)
-        else:
-            colFormat = False
-        col2 = {
-            'name': col,
-            'format': colFormat
-            }
-        cols2.append(col2)
+    
+    if data['analysis']['mode'] == 'search':
+        cols2 = pints.modeling.getDbt(dbtModel, cols)
+    else:
+        cols2 = [{'name': col, 'format': ''} for col in cols]
     df = df.to_json(date_format = 'iso', orient='values',
         default_handler=str)
     return json.dumps(

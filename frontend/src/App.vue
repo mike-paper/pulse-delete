@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div class="bg-gray-900" id="app">
     <div class="h-screen flex bg-gray-50 overflow-y-scroll">
       <TransitionRoot as="template" :show="mobileMenuOpen">
         <Dialog as="div" static class="fixed inset-0 flex z-40 md:hidden" @close="mobileMenuOpen = false" :open="mobileMenuOpen">
@@ -103,7 +103,7 @@
         <div class="flex flex-col w-20">
           <div class="flex flex-col h-0 flex-1 bg-gray-900">
             <div class="flex-1 flex flex-col">
-              <div class="flex-shrink-0 bg-gray-800 py-4 flex items-center justify-center">
+              <div class="flex-shrink-0 bg-gray-900 py-4 flex items-center justify-center">
                 <img class="h-8 w-auto" src="/paper-white-logo.png" alt="Logo">
               </div>
               <nav aria-label="Sidebar" class="py-6 flex flex-col items-center space-y-3">
@@ -162,7 +162,7 @@
         </div>
       </div>
 
-      <div class="flex-1 min-w-0 flex flex-col overflow-y-scroll">
+      <div class="divide-gray-800 divide-x flex-1 min-w-0 flex flex-col overflow-y-scroll">
         <!-- Mobile top navigation -->
         <div class="md:hidden">
           <div class="bg-gray-900 py-2 px-4 flex items-center justify-between sm:px-6 md:px-8">
@@ -194,11 +194,41 @@
               aria-labelledby="primary-heading" 
               class="min-w-0 flex-1 h-full flex flex-col overflow-y-scroll md:order-last"
             >
-              <div class="flex justify-center space-y-8 w-full pt-32">
-                <svg class="animate-spin -ml-1 mr-3 h-20 w-20 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+              <div >
+                <div class="flex justify-center space-y-8 w-full pt-32">
+                  <svg class="animate-spin -ml-1 mr-3 h-20 w-20 text-gray-100" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+                <div class="flex justify-center space-y-8 w-full pt-8">
+                  <div class="relative">
+                    <!-- <img class="mx-auto h-8" src="https://tailwindui.com/img/logos/workcation-logo-indigo-600-mark-gray-800-and-indigo-600-text.svg" alt="Workcation" /> -->
+                    <blockquote class="mt-10">
+                      <div class="max-w-3xl mx-auto text-center text-2xl leading-9 font-medium text-gray-500">
+                        <p>
+                          &ldquo;Everyone has a plan 'till they get punched in the mouth.&rdquo;
+                        </p>
+                      </div>
+                      <footer class="mt-8">
+                        <div class="md:flex md:items-center md:justify-center">
+                          <!-- <div class="md:flex-shrink-0">
+                            <img class="mx-auto h-10 w-10 rounded-full" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Mike_Tyson_2019_by_Glenn_Francis.jpg/1200px-Mike_Tyson_2019_by_Glenn_Francis.jpg" alt="" />
+                          </div> -->
+                          <div class="mt-3 text-center md:mt-0 md:flex md:items-center">
+                            <div class="text-base font-medium text-gray-700">Mike Tyson</div>
+
+                            <svg class="hidden md:block mx-1 h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M11 0h3L9 20H6l5-20z" />
+                            </svg>
+
+                            <div class="text-base font-medium text-gray-700">Boxer</div>
+                          </div>
+                        </div>
+                      </footer>
+                    </blockquote>
+                  </div>
+                </div>
               </div>
             </section>
 
@@ -280,7 +310,6 @@ import {
   XIcon, 
   ChartBarIcon } from '@heroicons/vue/outline'
 
-console.log('VUE_APP_PAPER_MAGIC_API_KEY: ', process.env.VUE_APP_PAPER_MAGIC_API_KEY)
 const magic = new Magic(process.env.VUE_APP_PAPER_MAGIC_API_KEY);
 
 export default {

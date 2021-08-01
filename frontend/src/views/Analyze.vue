@@ -2,7 +2,7 @@
   <div>
     <div v-if="!storeState.gotDbt">
       <div class="flex justify-center space-y-8 w-full pt-32">
-        <svg class="animate-spin -ml-1 mr-3 h-20 w-20 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <svg class="animate-spin -ml-1 mr-3 h-20 w-20 text-gray-100" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
@@ -11,25 +11,44 @@
     <div v-else class="px-8 py-4">
       <div class="flex-1 flex">
         <div class="w-full flex md:ml-0">
-          <div class="relative w-full text-gray-400 focus-within:text-gray-600">
-            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center">
-              <SearchIcon class="flex-shrink-0 h-5 w-5" aria-hidden="true" />
-            </div>
+          <div v-if="storeState.analysis.mode === 'search'" class="relative w-full text-gray-400 focus-within:text-gray-600">
             <input 
               v-model="searchTerm"
               ref="search"
               name="search_field" 
               id="search_field" 
-              class="mousetrap h-full w-full border-transparent py-2 pl-8 pr-3 text-base text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-0 focus:border-transparent focus:placeholder-gray-400" 
+              class="mousetrap bg-gray-800 rounded h-full w-full border-transparent pl-2 pr-3 text-base text-gray-100 placeholder-gray-600 focus:outline-none focus:ring-0 focus:border-transparent focus:placeholder-gray-600" 
               placeholder="Search" 
               autocomplete="off"
               @focus="searching = true"
             />
+            <!-- <div class="mr-12 cursor-pointer absolute inset-y-0 right-0 flex items-center ">
+              <SearchIcon class="flex-shrink-0 h-5 w-5 hover:text-gray-200 text-gray-600" aria-hidden="true" />
+            </div> -->
+            <div class="mr-4 cursor-pointer absolute inset-y-0 right-0 flex items-center">
+              <TerminalIcon @click="storeState.analysis.mode = 'sql'" class="flex-shrink-0 h-5 w-5 hover:text-gray-200 text-gray-600" aria-hidden="true" />
+            </div>
+          </div>
+          <div v-else class="relative w-full text-gray-400 focus-within:text-gray-600">
+            <textarea 
+              name="" 
+              id="" 
+              cols="30" 
+              rows="8"
+              spellcheck="false"
+              v-model="storeState.analysis.code"
+              class="mousetrap resize-none font-mono bg-gray-800 rounded h-full w-full border-transparent pl-4 pt-2 pr-3 text-base text-gray-100 placeholder-gray-600 focus:outline-none focus:ring-0 focus:border-transparent focus:placeholder-gray-600"
+            >
+            </textarea>
+            <div class="mr-4 absolute inset-y-0 right-0 flex mt-2">
+              <SearchIcon @click="storeState.analysis.mode = 'search'" class="cursor-pointer flex-shrink-0 h-5 w-5" aria-hidden="true" />
+            </div>
           </div>
         </div>
         <div 
-          v-if="!running" @click="runAnalysis" 
-          class="text-indigo-700 hover:text-indigo-400 cursor-pointer"
+          v-if="!running" 
+          @click="runAnalysis" 
+          class="text-gray-500 hover:text-gray-100 cursor-pointer ml-4"
           :class="{'animate-pulse': analysisChanged}"
         >
           <PlayIcon class="flex-shrink-0 h-10 w-10" aria-hidden="true" />
@@ -37,11 +56,11 @@
         <!-- <div v-else-if="searching" @click="closeSearch" class="text-gray-400 hover:text-gray-700 cursor-pointer">
           <XIcon class="flex-shrink-0 h-8 w-8" aria-hidden="true" />
         </div> -->
-        <div class="flex" v-else>
-          <div class="mr-4 mt-1 font-bold hover:text-gray-500 text-gray-900 rounded cursor-pointer" @click="cancelRun">
+        <div class="ml-4" v-else>
+          <!-- <div class="mr-4 mt-1 font-bold hover:text-gray-500 text-gray-100 rounded cursor-pointer" >
             Cancel
-          </div>
-          <svg class="animate-spin h-8 w-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          </div> -->
+          <svg @click="cancelRun" class="cursor-pointer animate-spin h-10 w-10 text-gray-100" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
@@ -52,7 +71,7 @@
           v-if="updatingField"
           class="col-span-9"
         >
-          <div class="text-xl font-bold">
+          <div class="text-xl font-bold text-gray-100">
             {{getFieldLabel(fieldInUpdate)}}
           </div>
           <div class="text-gray-500">
@@ -62,9 +81,9 @@
             <dt class="text-sm font-medium text-gray-500">
               Filter
             </dt>
-            <dd class="mt-1 flex text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+            <dd class="mt-1 flex text-sm text-gray-100 sm:mt-0 sm:col-span-2">
               <span class="ml-4 flex-shrink-0">
-                <button type="button" class="bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                <button type="button" class="bg-gray-900 rounded-md font-medium text-gray-600 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
                   Add
                 </button>
               </span>
@@ -74,11 +93,11 @@
             <dt class="text-sm font-medium text-gray-500">
               Axis
             </dt>
-            <dd class="mt-1 flex text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+            <dd class="mt-1 flex text-sm text-gray-100 sm:mt-0 sm:col-span-2">
               <div>
                 <Listbox as="div" v-model="fieldInUpdate.axis">
                   <div class="mt-1 relative">
-                    <ListboxButton class="bg-white relative w-full border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <ListboxButton class="bg-white relative w-full border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 sm:text-sm">
                       <span class="block truncate">{{ fieldInUpdate.axis.label }}</span>
                       <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                         <SelectorIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
@@ -94,13 +113,13 @@
                           :value="option" 
                           v-slot="{ active, selected }"
                         >
-                          <li :class="[active ? 'text-white bg-indigo-600' : 'text-gray-900', 'cursor-default select-none relative py-2 pl-3 pr-9']">
+                          <li :class="[active ? 'text-white bg-gray-600' : 'text-gray-100', 'cursor-default select-none relative py-2 pl-3 pr-9']">
                             <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">
                               {{ option.label }} 
                               <!-- {{selected}} {{active}} -->
                             </span>
 
-                            <span v-if="selected" :class="[selected ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                            <span v-if="selected" :class="[selected ? 'text-gray-100' : 'text-gray-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                               <CheckIcon class="h-5 w-5" aria-hidden="true" />
                               
                             </span>
@@ -117,9 +136,9 @@
             <dt class="text-sm font-medium text-gray-500">
               Hidden
             </dt>
-            <dd class="mt-1 flex text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+            <dd class="mt-1 flex text-sm text-gray-100 sm:mt-0 sm:col-span-2">
               <div>
-                <Switch v-model="fieldInUpdate.hidden" :class="[fieldInUpdate.hidden ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500']">
+                <Switch v-model="fieldInUpdate.hidden" :class="[fieldInUpdate.hidden ? 'bg-gray-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500']">
                   <span class="sr-only">Use setting</span>
                   <span :class="[fieldInUpdate.hidden ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']">
                     <span :class="[fieldInUpdate.hidden ? 'opacity-0 ease-out duration-100' : 'opacity-100 ease-in duration-200', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
@@ -128,7 +147,7 @@
                       </svg>
                     </span>
                     <span :class="[fieldInUpdate.hidden ? 'opacity-100 ease-in duration-200' : 'opacity-0 ease-out duration-100', 'absolute inset-0 h-full w-full flex items-center justify-center transition-opacity']" aria-hidden="true">
-                      <svg class="h-3 w-3 text-indigo-600" fill="currentColor" viewBox="0 0 12 12">
+                      <svg class="h-3 w-3 text-gray-600" fill="currentColor" viewBox="0 0 12 12">
                         <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z" />
                       </svg>
                     </span>
@@ -143,7 +162,7 @@
               <div>
                 <button 
                   @click="updatingField=false"
-                  class="w-full py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 shadow-sm hover:bg-indigo-500 focus:outline-none focus:shadow-outline-blue focus:bg-indigo-500 active:bg-indigo-600 transition duration-150 ease-in-out"
+                  class="w-full py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-gray-600 shadow-sm hover:bg-gray-500 focus:outline-none focus:shadow-outline-blue focus:bg-gray-500 active:bg-gray-600 transition duration-150 ease-in-out"
                 >
                   Done
                 </button>
@@ -170,9 +189,9 @@
               <span 
                 v-if="isSelected(index, index2, column, 'dimension')"
               >
-                <span @click="updateDimensionNow(index, index2, column)" class="mr-3 mb-2 inline-flex rounded cursor-pointer items-center py-1 pl-3 pr-1 text-sm font-medium bg-indigo-100 text-indigo-700">
+                <span @click="updateDimensionNow(index, index2, column)" class="mr-3 mb-2 inline-flex rounded cursor-pointer items-center py-1 pl-3 pr-1 text-sm font-medium bg-gray-800 text-gray-100">
                   {{model.name}}.{{getDimensionLabel(column)}}
-                  <button @click="removeColumn(index, index2, column, 'dimension')" type="button" class="flex-shrink-0 ml-1 h-4 w-4 rounded-full inline-flex items-center justify-center text-indigo-400 hover:bg-indigo-200 hover:text-indigo-500 focus:outline-none focus:bg-indigo-500 focus:text-white">
+                  <button @click="removeColumn(index, index2, column, 'dimension')" type="button" class="flex-shrink-0 ml-1 h-4 w-4 rounded-full inline-flex items-center justify-center text-gray-100 hover:bg-gray-100 hover:text-gray-100 focus:outline-none focus:bg-gray-200">
                     <svg class="h-2 w-2" stroke="currentColor" fill="none" viewBox="0 0 8 8">
                       <path stroke-linecap="round" stroke-width="1.5" d="M1 1l6 6m0-6L1 7" />
                     </svg>
@@ -210,20 +229,29 @@
         </div>
         <div class="col-span-3 pt-4 flex justify-end mr-2">
           <ViewGridIcon 
-            class="h-6 w-6 hover:bg-gray-200 rounded cursor-pointer ml-3 text-gray-500"
-            :class="{'text-gray-900': storeState.analysis.viz.type === 'grid'}"
+            class="h-6 w-6 hover:bg-gray-500 rounded cursor-pointer ml-3"
+            :class="{
+              'text-gray-200': storeState.analysis.viz.type === 'grid',
+              'text-gray-700': storeState.analysis.viz.type != 'grid',
+              }"
             aria-hidden="true" 
             @click="flipVizType('grid')"
           />
           <PresentationChartLineIcon 
-            class="h-6 w-6 hover:bg-gray-200 rounded cursor-pointer ml-3 text-gray-500"
-            :class="{'text-gray-900': storeState.analysis.viz.type === 'line'}"
+            class="h-6 w-6 hover:bg-gray-500 rounded cursor-pointer ml-3"
+            :class="{
+              'text-gray-200': storeState.analysis.viz.type === 'line',
+              'text-gray-700': storeState.analysis.viz.type != 'line',
+              }"
             aria-hidden="true" 
             @click="flipVizType('line')"
           />
           <PresentationChartBarIcon 
-            class="h-6 w-6 hover:bg-gray-200 rounded cursor-pointer ml-3 text-gray-500"
-            :class="{'text-gray-900': storeState.analysis.viz.type === 'bar'}"
+            class="h-6 w-6 hover:bg-gray-500 rounded cursor-pointer ml-3"
+            :class="{
+              'text-gray-200': storeState.analysis.viz.type === 'bar',
+              'text-gray-700': storeState.analysis.viz.type != 'bar',
+              }"
             aria-hidden="true" 
             @click="flipVizType('bar')"
           />
@@ -241,7 +269,7 @@
       >
         <div class="float-right mr-2">
           <XIcon 
-            class="flex-shrink-0 h-6 w-6 hover:bg-gray-200 rounded cursor-pointer" aria-hidden="true" 
+            class="flex-shrink-0 h-6 w-6 hover:bg-gray-800 text-gray-500 rounded cursor-pointer" aria-hidden="true" 
             @click="searching=false"
           />
         </div>
@@ -249,10 +277,10 @@
           v-for="(model, index) in storeState.dbt.models"
           :key="index"
         >
-          <div class="font-bold text-2xl">
+          <div class="font-bold text-2xl text-gray-100">
             {{model.name}}
           </div>
-          <div class="font-bold pl-4 border-l text-red-400">
+          <div class="font-bold pl-4 border-l text-red-300">
             Dimensions
           </div>
           <div
@@ -265,8 +293,8 @@
               v-if="isDimOrMeas(index, index2, column, 'dimension') && searchMatch(model, column)"
               :class="{
                 'cursor-pointer': !isDateColumn(column),
-                'hover:bg-gray-200': !isDateColumn(column),
-                'text-red-400': true,
+                'hover:bg-gray-700': !isDateColumn(column),
+                'text-red-300': true,
                 'font-bold': isSelected(index, index2, column, 'dimension') && !isDateColumn(column),
                 'rounded': true,
                 'py-1': true, 
@@ -282,7 +310,7 @@
                   :class="{
                     'font-bold': column.meta.dimension.timeframe === timeframe,
                     'pl-4': true,
-                    'hover:bg-gray-200': true,
+                    'hover:bg-gray-700': true,
                     'rounded': true,
                     'py-1': true,
                   }"
@@ -292,7 +320,7 @@
               </div>
             </div>
           </div>
-          <div class="font-bold pl-4 border-l text-blue-400">
+          <div class="font-bold pl-4 border-l text-blue-300">
             Measures
           </div>
           <div
@@ -309,8 +337,8 @@
                 @click="selectMeasure(index, index3, measureName)"
                 :class="{
                   'cursor-pointer': true,
-                  'hover:bg-gray-200': true,
-                  'text-blue-400': true,
+                  'hover:bg-gray-700': true,
+                  'text-blue-300': true,
                   'rounded': true,
                   'font-bold': isMeasureSelected(index, index3, measureName),
                   'py-1': true, 
@@ -325,18 +353,18 @@
       </div>
     </div>
     <div 
-      class="px-4 py-4 w-full"
+      class="px-4 py-4 mr-16 w-full"
       :class="{'hidden': storeState.analysis.viz.type === 'grid'}"
     >
       <div class="w-full" id="viz">
       </div>
     </div>
     <div 
-      class="px-4 py-4"
+      class="px-4 py-4 mr-16"
       :class="{'hidden': storeState.analysis.viz.type != 'grid'}"
     >
       <div>
-        <div id="gridInner">
+        <div class="ml-4" id="gridInner">
 
         </div>
       </div>
@@ -368,12 +396,13 @@ import SSF from 'ssf'
 // import PaperSelect from '@/components/PaperSelect.vue'
 
 import { Grid, html } from "gridjs";
-import "gridjs/dist/theme/mermaid.css";
+// import "gridjs/dist/theme/mermaid.css";
 
 import { 
   ArrowSmUpIcon, 
   ArrowSmDownIcon, 
   SearchIcon, 
+  TerminalIcon,
   XIcon, 
   CheckCircleIcon,
   ExclamationCircleIcon,
@@ -399,6 +428,7 @@ export default {
   },
   components: {
     SearchIcon,
+    TerminalIcon,
     XIcon,
     CheckCircleIcon,
     ExclamationCircleIcon,
@@ -444,7 +474,9 @@ export default {
       sort: true,
       search: false,
       pagination: {
-        limit: 20
+        enabled: true,
+        limit: 20,
+        buttonsCount: 0,
       },
       fixedHeader: true,
       height: '400px',
@@ -452,10 +484,16 @@ export default {
       // columns: ["Name", "Email", "Phone Number"],
       data: [],
       className: {
-        td: 'px-6 py-4 whitespace-nowrap text-sm text-gray-900 divide-y divide-gray-200',
-        th: 'px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 tracking-wider',
+        td: 'px-6 py-4 whitespace-nowrap text-sm text-gray-100 divide-y divide-gray-200 border border-gray-600',
+        th: 'px-6 py-3 text-left text-xs font-medium text-gray-500 bg-gray-800 tracking-wider cursor-pointer hover:bg-gray-600 hover:text-gray-200 border border-gray-600 leading-none',
+        tr: 'bg-gray-700 text-gray-100',
         table: 'min-w-full divide-gray-200 w-auto',
-        tbody: 'bg-white '
+        tbody: 'bg-gray-800',
+        container: 'overflow-y-scroll rounded',
+        footer: 'absolute gridjs-footer mr-20 pt-4 right-0 text-gray-500',
+        paginationButtonPrev: 'absolute right-0 mr-16',
+        paginationButtonNext: 'absolute right-0',
+        
       }
     })
     // window.vegaEmbed('#view', yourVlSpec);
@@ -521,7 +559,7 @@ export default {
             "gridColor": "#ccc",
             "tickColor": "#fff",
             "domain": false,
-            "grid": false
+            "grid": true
           }
         },
         vegaSpec: {
@@ -589,6 +627,15 @@ export default {
             }
             this.runAnalysis()
           }
+        }
+      } else if (this.$route.query.drill) {
+        if (this.$route.query.drill === 'mrr') {
+          let code = `select\nmrr.email,\nmrr.customer_created_on,\n`
+          code += `mrr.mrr,\nmrr.mrr_status,\nmrr.mrr_rank\nfrom mrr_facts as mrr\n`
+          code += `where current_month = 1\nand mrr.mrr_status != 'churn'`
+          this.storeState.analysis.code = code
+          this.storeState.analysis.mode = 'sql'
+          this.runAnalysis()
         }
       }
     },
@@ -714,26 +761,6 @@ export default {
       this.$refs.search.blur()
       this.searching = false
       this.searchTerm = ''
-    },
-    generateDemoTable() {
-      new Grid({
-        sort: true,
-        // search: true,
-        columns: ["Name", "Email", "Phone Number"],
-        data: [
-          ["John", "john@example.com", "(353) 01 222 3333"],
-          ["Mark", "mark@gmail.com", "(01) 22 888 4444"],
-          ["Eoin", "eoin@gmail.com", "0097 22 654 00033"],
-          ["Sarah", "sarahcdd@gmail.com", "+322 876 1233"],
-          ["Afshin", "afshin@mail.com", "(353) 22 87 8356"]
-        ],
-        className: {
-          td: 'px-6 py-4 whitespace-nowrap text-sm text-gray-900 divide-y divide-gray-200',
-          th: 'px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider',
-          table: 'min-w-full divide-gray-200',
-          tbody: 'bg-white '
-        }
-      }).render(document.getElementById("testtable"));
     },
     createGrid(data) {
       if (!data) data = this.storeState.analysis.results
@@ -942,7 +969,7 @@ export default {
       console.log('runAnalysis...')
       let selected = this.getAllSelected()
       this.analysisChanged = false
-      if (selected.length === 0) {
+      if (selected.length === 0 && this.storeState.analysis.mode === 'search') {
         this.searching = true
         let opts = {
           primary: 'Error running analysis',
@@ -953,7 +980,11 @@ export default {
         return
       }
       const path = this.getApiUrl('run_analysis')
-      let d = {user: this.storeState.user, dbt: this.storeState.dbt}
+      let d = {
+        user: this.storeState.user, 
+        dbt: this.storeState.dbt, 
+        analysis: this.storeState.analysis
+        }
       this.running = true
       this.searching = false
       axios.post(path, d)
@@ -1122,7 +1153,7 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style>
-  .gridjs-tbody {
+  /* .gridjs-tbody {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     line-height: 1.5;
     --border-opacity: 1;
@@ -1135,4 +1166,24 @@ export default {
     --divide-opacity: 1;
     border-color: rgba(237, 242, 247, var(--divide-opacity));
   }
+  *, ::before, ::after {
+    box-sizing: border-box;
+    border-width: 0;
+    border-style: none;
+  }
+  th.gridjs-th {
+    color: #6b7280;
+    background-color: #2d3748;
+    border: none;
+    border-top: none;
+    padding: 14px 24px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    box-sizing: content-box;
+    white-space: nowrap;
+    outline: none;
+    vertical-align: middle;
+  } */
 </style>
