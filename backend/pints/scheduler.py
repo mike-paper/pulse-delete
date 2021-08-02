@@ -54,7 +54,7 @@ def startScheduler(engine):
     checkQueueJob = scheduler.add_job(checkQueue, trigger='interval', seconds=60)
     # testSchedJob = scheduler.add_job(testSched, trigger='interval', seconds=10)
     hourlyJob = scheduler.add_job(func=runHourly, trigger='cron', minute=45, second=30)
-    weeklyJob = scheduler.add_job(func=runWeekly, kwargs={'engine': engine}, trigger='cron', day_of_week='mon', hour=8, minute=30, second=0)
+    weeklyJob = scheduler.add_job(func=runWeekly, trigger='cron', day_of_week='mon', hour=8, minute=30, second=0)
     return True
     
     
