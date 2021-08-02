@@ -66,7 +66,7 @@
           </svg>
         </div>
       </div>
-      <div class="grid grid-cols-12 pt-4">
+      <div v-if="storeState.analysis.mode === 'search'" class="grid grid-cols-12 pt-4">
         <div
           v-if="updatingField"
           class="col-span-9"
@@ -97,7 +97,7 @@
               <div>
                 <Listbox as="div" v-model="fieldInUpdate.axis">
                   <div class="mt-1 relative">
-                    <ListboxButton class="bg-white relative w-full border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 sm:text-sm">
+                    <ListboxButton class="bg-gray-800 relative w-full border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 sm:text-sm">
                       <span class="block truncate">{{ fieldInUpdate.axis.label }}</span>
                       <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                         <SelectorIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
@@ -105,7 +105,7 @@
                     </ListboxButton>
 
                     <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                      <ListboxOptions class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                      <ListboxOptions class="absolute cursor-pointer z-10 mt-1 w-full bg-gray-800 shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
                         <ListboxOption 
                           as="template" 
                           v-for="(option, index) in vizOptions.axis" 
@@ -113,7 +113,7 @@
                           :value="option" 
                           v-slot="{ active, selected }"
                         >
-                          <li :class="[active ? 'text-white bg-gray-600' : 'text-gray-100', 'cursor-default select-none relative py-2 pl-3 pr-9']">
+                          <li :class="[active ? 'text-white bg-gray-600' : 'text-gray-100', 'cursor-pointer select-none relative py-2 pl-3 pr-9']">
                             <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">
                               {{ option.label }} 
                               <!-- {{selected}} {{active}} -->
@@ -189,10 +189,10 @@
               <span 
                 v-if="isSelected(index, index2, column, 'dimension')"
               >
-                <span @click="updateDimensionNow(index, index2, column)" class="mr-3 mb-2 inline-flex rounded cursor-pointer items-center py-1 pl-3 pr-1 text-sm font-medium bg-gray-800 text-gray-100">
+                <span @click="updateDimensionNow(index, index2, column, $event)" class="mr-3 mb-2 inline-flex rounded cursor-pointer items-center py-1 pl-3 pr-1 text-sm font-medium bg-gray-800 text-gray-100">
                   {{model.name}}.{{getDimensionLabel(column)}}
-                  <button @click="removeColumn(index, index2, column, 'dimension')" type="button" class="flex-shrink-0 ml-1 h-4 w-4 rounded-full inline-flex items-center justify-center text-gray-100 hover:bg-gray-100 hover:text-gray-100 focus:outline-none focus:bg-gray-200">
-                    <svg class="h-2 w-2" stroke="currentColor" fill="none" viewBox="0 0 8 8">
+                  <button @click="removeColumn(index, index2, column, 'dimension')" type="button" class="removeCol flex-shrink-0 ml-3 h-4 w-4 rounded-full inline-flex items-center justify-center text-gray-100 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:bg-gray-200">
+                    <svg class="h-2 w-2 removeCol" stroke="currentColor" fill="none" viewBox="0 0 8 8">
                       <path stroke-linecap="round" stroke-width="1.5" d="M1 1l6 6m0-6L1 7" />
                     </svg>
                   </button>
@@ -213,10 +213,10 @@
                   <span 
                     v-if="isMeasureSelected(index, index3, measureName)"
                   >
-                    <span @click="updateMeasureNow(index, index3, measureName, column)" class="mr-3 mb-2 inline-flex rounded cursor-pointer items-center py-1 pl-3 pr-1 text-sm font-medium bg-indigo-100 text-indigo-700">
+                    <span @click="updateMeasureNow(index, index3, measureName, column)" class="mr-3 mb-2 inline-flex rounded cursor-pointer items-center py-1 pl-3 pr-1 text-sm font-medium bg-gray-800 text-gray-100">
                       {{model.name}}.{{getMeasureLabel(measure, measureName)}}
-                      <button @click="selectMeasure(index, index3, measureName)" type="button" class="flex-shrink-0 ml-1 h-4 w-4 rounded-full inline-flex items-center justify-center text-indigo-400 hover:bg-indigo-200 hover:text-indigo-500 focus:outline-none focus:bg-indigo-500 focus:text-white">
-                        <svg class="h-2 w-2" stroke="currentColor" fill="none" viewBox="0 0 8 8">
+                      <button @click="selectMeasure(index, index3, measureName)" type="button" class="removeCol flex-shrink-0 ml-3 h-4 w-4 rounded-full inline-flex items-center justify-center text-gray-100 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:bg-gray-200">
+                        <svg class="h-2 w-2 removeCol" stroke="currentColor" fill="none" viewBox="0 0 8 8">
                           <path stroke-linecap="round" stroke-width="1.5" d="M1 1l6 6m0-6L1 7" />
                         </svg>
                       </button>
@@ -261,6 +261,9 @@
           /> -->
         </div>
       </div>
+      <div v-else class="grid grid-cols-12 pt-4">
+        <!-- empty div for when in SQL mode -->
+      </div>
       <div 
         :class="{
           'hidden': !searching,
@@ -280,7 +283,7 @@
           <div class="font-bold text-2xl text-gray-100">
             {{model.name}}
           </div>
-          <div class="font-bold pl-4 border-l text-red-300">
+          <div class="text-2xl font-bold pl-4 border-l text-red-300">
             Dimensions
           </div>
           <div
@@ -320,7 +323,7 @@
               </div>
             </div>
           </div>
-          <div class="font-bold pl-4 border-l text-blue-300">
+          <div class="text-2xl font-bold pl-4 border-l text-blue-300">
             Measures
           </div>
           <div
@@ -548,61 +551,28 @@ export default {
             "guide-title": {"font": "Inter, sans-serif", "fontSize": 12},
             "group-title": {"font": "Inter, sans-serif", "fontSize": 12}
           },
-          "title": {
-            "font": "Inter, sans-serif",
-            "fontSize": 14,
-            "fontWeight": "bold",
-            "dy": -3,
-            "anchor": "start"
-          },
           "axis": {
-            "gridColor": "#ccc",
-            "tickColor": "#fff",
+            "gridColor": "#f7fafc",
+            "tickColor": "transparent",
+            "labelColor": "#f7fafc",
+            "titleColor": "#f7fafc",
             "domain": false,
-            "grid": true
           }
         },
         vegaSpec: {
           "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
           "description": "MRR by Month",
           "width": "container",
-          // "width": "500",
           "mark": {
             "type": "line", 
             "tooltip": false, 
-            "fill": null, 
-            "stroke": "#010101",
-            "point": {"color": "#010101"},
+            "fill": "#9ae6b4", 
+            "stroke": "#9ae6b4",
+            "point": {"color": "#9ae6b4"},
             },
           "encoding": {
-              "x": {
-                "field": "month_dt", 
-                "timeUnit": "yearmonth", 
-                "title": null,
-                // "axis": {"tickCount": {"interval": "month", "step": 6}}
-                "axis": {
-                  "values": [
-                    {"year": 2019, "month": "may", "date": 1},
-                    {"year": 2021, "month": "may", "date": 1}
-                    ]
-                  }
-                },
-              "y": {
-                "field": "mrr", 
-                "aggregate": "sum", 
-                "type": "quantitative",
-                "title": null
-                },
-              "tooltip": [
-                  {"field": "month_dt", "timeUnit": "yearmonth", "title": "Date"},
-                  {
-                    "field": "mrr", 
-                    "aggregate": "sum", 
-                    "type": "quantitative",
-                    "format": "$,.0f",
-                    "title": "MRR"
-                  }
-              ]
+              "x": {},
+              "y": {},
           },
           data: {values: []},
         },
@@ -639,7 +609,11 @@ export default {
         }
       }
     },
-    updateDimensionNow(index, index2, column) {
+    updateDimensionNow(index, index2, column, e) {
+      if (e.target && e.target.classList.contains('removeCol')) {
+        console.log('updateDimensionNow', e)
+        return
+      }
       this.updatingField = true
       this.fieldInUpdate = column
       this.fieldInUpdate.index = index
@@ -679,12 +653,37 @@ export default {
       this.storeState.analysis.viz.type = type
       this.createViz({})
     },
+    checkIfEncodingIsValid() {
+      console.log('checkIfEncodingIsValid', this.storeState.analysis.viz.encoding, this.storeState.analysis.results)
+      let xField = this.storeState.analysis.viz.encoding.x.field
+      let cols = this.storeState.analysis.results.cols.map(c => c.name)
+      if (!cols.includes(xField)) {
+        for (let index = 0; index < this.storeState.analysis.results.sql.selected.length; index++) {
+          const selected = this.storeState.analysis.results.sql.selected[index];
+          if (selected.dimOrMeas === 'dimension') {
+            this.storeState.analysis.viz.encoding.x.field = selected.alias
+            break
+          }
+        }
+      }
+      let yField = this.storeState.analysis.viz.encoding.y.field
+      if (!cols.includes(yField)) {
+        for (let index = 0; index < this.storeState.analysis.results.sql.selected.length; index++) {
+          const selected = this.storeState.analysis.results.sql.selected[index];
+          if (selected.dimOrMeas === 'measure') {
+            this.storeState.analysis.viz.encoding.y.field = selected.alias
+            break
+          }
+        } 
+      }
+    },
     createViz(opts) {
       console.log('createViz...', this.storeState.analysis.viz.type)
       if (this.storeState.analysis.viz.type === 'grid') {
         this.createGrid(false)
         return
       }
+      this.checkIfEncodingIsValid()
       this.searching = false
       this.updatingField = false
       this.searchTerm = ''
@@ -704,29 +703,7 @@ export default {
         let ttY = {"field": viz.encoding.y.field, "title": viz.encoding.y.field}
         viz.encoding.tooltip.push(ttY)
       }
-      
-//       {
-//     "x": {
-//         "field": "Month",
-//         "type": "ordinal"
-//     },
-//     "y": {
-//         "field": "Avg MRR",
-//         "type": "quantitative"
-//     }
-// }
-      // customers.encoding.tooltip = [
-      //     {"field": "mrr_month_dt", "timeUnit": "yearmonth", "title": "Date"},
-      //     {
-      //       "field": "active", 
-      //       "aggregate": "sum", 
-      //       "type": "quantitative",
-      //       "format": ",.0f",
-      //       "title": "Customers"
-      //     }
-      // ]
       viz.mark.type = this.storeState.analysis.viz.type
-      // viz.data.values = []
       for (let index = 0; index < this.storeState.analysis.results.rows.length; index++) {
         let row = {}
         const element = this.storeState.analysis.results.rows[index];
@@ -735,7 +712,7 @@ export default {
         }
         viz.data.values.push(row)
       }
-      window.vegaEmbed('#viz', viz, opts);
+      window.vegaEmbed('#viz', viz, vegaOpts);
     },
     setupMousetrap() {
       var self = this
@@ -746,7 +723,7 @@ export default {
       });
       Mousetrap.bind('esc', function(e) { 
         if (e && e.preventDefault) e.preventDefault()
-        self.$refs.search.blur()
+        if (self.$refs && self.$refs.search) self.$refs.search.blur()
         self.searching = false
         self.updatingField = false
         self.searchTerm = ''
@@ -821,6 +798,7 @@ export default {
         this.storeState.dbt.models[index].columns[index2].meta[dimOrMeas].selected = true
       }
       this.searchTerm = ''
+      this.$refs.search.focus()
     },
     removeColumn(index, index2, column, dimOrMeas) {
       if (this.isDateColumn(column)) {
@@ -847,6 +825,7 @@ export default {
       let curVal = this.storeState.dbt.models[index].columns[index2].meta[dimOrMeas].selected
       this.storeState.dbt.models[index].columns[index2].meta[dimOrMeas].selected = !curVal
       this.searchTerm = ''
+      this.$refs.search.focus()
     },
     selectMeasure(index, index2, measureName) {
       let curVal = this.storeState.dbt.models[index].columns[index2].meta.measures[measureName].selected
@@ -854,6 +833,8 @@ export default {
       this.searchTerm = ''
       this.$forceUpdate()
       setTimeout(() => this.updatingField = false, 0);
+      // setTimeout(() => this.updatingField = false, 0);
+      this.$refs.search.focus()
     },
     isMeasureSelected(index, index2, measureName) {
       let curVal = this.storeState.dbt.models[index].columns[index2].meta.measures[measureName].selected
@@ -1004,6 +985,7 @@ export default {
           
           this.storeState.analysis.results = res.data
           this.createGrid(res.data)
+          if (this.storeState.analysis.mode === 'sql') return
           if (!this.storeState.analysis.viz.encoding.x.field) {
             for (let index = 0; index < res.data.sql.selected.length; index++) {
               const selected = res.data.sql.selected[index];

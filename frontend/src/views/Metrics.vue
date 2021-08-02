@@ -261,13 +261,6 @@ export default {
             "guide-title": {"font": "Inter, sans-serif", "fontSize": 12},
             "group-title": {"font": "Inter, sans-serif", "fontSize": 12}
           },
-          // "title": {
-          //   "font": "Inter, sans-serif",
-          //   "fontSize": 14,
-          //   "fontWeight": "bold",
-          //   "dy": -3,
-          //   "anchor": "start"
-          // },
           "axis": {
             "gridColor": "#f7fafc",
             "tickColor": "transparent",

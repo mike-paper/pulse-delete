@@ -30,25 +30,28 @@ def createReadOnlyUser(engine, teamId):
     userName = f"team_{teamId}_readonly"
     readonlyPassword = os.environ.get('PAPER_READONLY_PASSWORD')
     with engine.connect() as con:
-        trans = con.begin()
-        schemaName = f"team_{teamId}_stripe"
-        sql = f"CREATE SCHEMA IF NOT EXISTS {schemaName}"
-        con.execute(sql)
-        sql = f"create user {userName} PASSWORD '{readonlyPassword}';"
-        con.execute(sql)
-        sql = f"grant usage on schema {schemaName} to {userName};"
-        con.execute(sql)
-        sql = f"grant select on all tables in schema {schemaName} to {userName};"
-        con.execute(sql)
-        sql = f"alter user {userName} set search_path = {schemaName};"
-        con.execute(sql)
-        sql = f'''
-        ALTER DEFAULT PRIVILEGES IN SCHEMA {schemaName} 
-            GRANT SELECT ON TABLES TO {userName};
-        '''
-        con.execute(sql)
-        trans.commit()
-    return userName
+        try:
+            trans = con.begin()
+            schemaName = f"team_{teamId}_stripe"
+            sql = f"CREATE SCHEMA IF NOT EXISTS {schemaName}"
+            con.execute(sql)
+            sql = f"create user {userName} PASSWORD '{readonlyPassword}';"
+            con.execute(sql)
+            sql = f"grant usage on schema {schemaName} to {userName};"
+            con.execute(sql)
+            sql = f"grant select on all tables in schema {schemaName} to {userName};"
+            con.execute(sql)
+            sql = f"alter user {userName} set search_path = {schemaName};"
+            con.execute(sql)
+            sql = f'''
+            ALTER DEFAULT PRIVILEGES IN SCHEMA {schemaName} 
+                GRANT SELECT ON TABLES TO {userName};
+            '''
+            con.execute(sql)
+            trans.commit()
+        except Exception as e:
+            {'ok': False, 'error': str(e)}
+    return {'ok': True, 'userName': userName}
 
 def insertRows(engine, table, rows, teamId):
     with engine.connect() as con:

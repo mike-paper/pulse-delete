@@ -101,8 +101,8 @@ def checkForTeam(engine, email, userId):
 # slackInfo = pints.postgres.getSlackInfo(db.engine, 5)
 # pints.slack.testPush({'msg': 'in summerrrrrr!!!!'}, slackInfo['bot_token'])
 
-testUser = pints.postgres.createReadOnlyUser(db.engine, 5)
-logger.info(f'testUser: {testUser}')
+# testUser = pints.postgres.createReadOnlyUser(db.engine, 5)
+# logger.info(f'testUser: {testUser}')
 
 @app.route('/ping', methods=["GET"])
 def ping():
@@ -160,6 +160,7 @@ def run_analysis():
         db_url = f"postgresql://team_{user['team_id']}_readonly:{userPass}@oregon-postgres.render.com/paperdb"
         # logger.info(f'db_url: {db_url}')
         userEngine = sqlalchemy.create_engine(db_url, connect_args={'options': f"-csearch_path=team_{user['team_id']}_stripe"})
+        dbtModel = {'sql': sql}
     logger.info(f'run_analysis sql: {sql}')
     
     try:
@@ -169,13 +170,13 @@ def run_analysis():
         return {
             'ok': False,
             'error': str(e),
-            'sql': sql,
+            'sql': dbtModel,
         }
     logger.info(f'run_analysis df: {df.head()}')
     cols = df.columns.tolist()
     
     if data['analysis']['mode'] == 'search':
-        cols2 = pints.modeling.getDbt(dbtModel, cols)
+        cols2 = pints.modeling.getCols(dbtModel, cols)
     else:
         cols2 = [{'name': col, 'format': ''} for col in cols]
     df = df.to_json(date_format = 'iso', orient='values',
@@ -183,7 +184,7 @@ def run_analysis():
     return json.dumps(
         {
             'ok' : True,
-            'sql': sql,
+            'sql': dbtModel,
             'rows': json.loads(df, strict=False),
             'cols': cols2,
         }), 200, {'ContentType':'application/json'}
