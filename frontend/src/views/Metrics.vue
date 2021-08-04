@@ -15,7 +15,7 @@
         </div> -->
         <!-- This example requires Tailwind CSS v2.0+ -->
         <dl class="mt-5 grid grid-cols-1 bg-gray-900 overflow-hidden divide-y divide-gray-800 md:grid-cols-3 md:divide-y-0 md:divide-x">
-          <div class="px-4 py-5 sm:p-6 hover:shadow-lg">
+          <div class="px-4 py-5 sm:p-6 hover:bg-gray-800">
             <dt class="text-base font-normal text-gray-500">
               MRR
             </dt>
@@ -35,7 +35,7 @@
               </div>
             </dd>
           </div>
-          <div class="px-4 py-5 sm:p-6 hover:shadow-lg">
+          <div class="px-4 py-5 sm:p-6 hover:bg-gray-800">
             <dt class="text-base font-normal text-gray-500">
               Customers
             </dt>
@@ -55,7 +55,7 @@
               </div>
             </dd>
           </div>
-          <div class="px-4 py-5 sm:p-6 hover:shadow-lg">
+          <div class="px-4 py-5 sm:p-6 hover:bg-gray-800">
             <dt class="text-base font-normal text-gray-500">
               Churn
             </dt>
@@ -81,16 +81,104 @@
         >
           <div 
             id="mrr" 
-            class="hover:shadow-lg cursor-pointer"
-            @click="goToAnalyze('mrrChart')"
+            class="hover:bg-gray-800"
           >
             mrr
           </div>
-          <div id="customers" class="hover:shadow-lg">
+          <div id="customers" class="hover:bg-gray-800">
             customers
           </div>
-          <div id="churn" class="hover:shadow-lg">
+          <div id="churn" class="hover:bg-gray-800">
             churn
+          </div>
+          <div id="ltv" class="hover:bg-gray-800">
+            <div class="px-4 py-5 sm:p-6 hover:bg-gray-800">
+              <div class="text-base font-normal text-gray-500">
+                LTV (Life Time Value)
+              </div>
+              <div class="text-gray-500 grid grid-cols-3 border-b border-dashed border-gray-500 mt-4">
+                <div class="col-span-1">
+                  <div class="inline">
+                    ARPU 
+                  </div>
+                   <Popper class="inline" hover>
+                    <QuestionMarkCircleIcon class="mb-1 inline h-5 w-5 text-gray-500" aria-hidden="true" />
+                    <template #content>
+                      <div class="bg-gray-700 text-gray-100 px-3 py-2 rounded">Average revenue per user</div>
+                    </template>
+                  </Popper>
+                </div>
+                <div class="col-span-1">
+                  
+                </div>
+                <div class="col-span-1 text-right">
+                  <!-- ${{(storeState.metricData.ltv.arpu).toFixed(0)}}  -->
+                  {{ssfFormatter('$#,##0', storeState.metricData.ltv.arpu)}}
+                </div>
+              </div>
+              <div class="text-gray-500 grid grid-cols-3 border-b border-dashed border-gray-500 mt-4">
+                <div class="col-span-1">
+                  <div class="inline">
+                    Churn
+                  </div>
+                   <Popper class="inline" hover>
+                    <QuestionMarkCircleIcon class="mb-1 inline h-5 w-5 text-gray-500" aria-hidden="true" />
+                    <template #content>
+                      <div class="bg-gray-700 text-gray-100 px-3 py-2 rounded">Revenue % churn last 3 month average</div>
+                    </template>
+                  </Popper>
+                </div>
+                <div class="col-span-1">
+                  
+                </div>
+                <div class="col-span-1 text-right">
+                  {{(storeState.metricData.ltv.churn_rate*100).toFixed(1)}}%
+                </div>
+              </div>
+              <div class="text-gray-500 grid grid-cols-3 border-b border-dashed border-gray-500 mt-4">
+                <div class="col-span-1">
+                  <div class="inline">
+                    Lifetime
+                  </div>
+                   <Popper class="inline" hover>
+                    <QuestionMarkCircleIcon class="mb-1 inline h-5 w-5 text-gray-500" aria-hidden="true" />
+                    <template #content>
+                      <div class="bg-gray-700 text-gray-100 px-3 py-2 rounded">Average # of months a customer pays you</div>
+                    </template>
+                  </Popper>
+                </div>
+                <div class="col-span-1">
+                  
+                </div>
+                <div class="col-span-1 text-right">
+                  {{(storeState.metricData.ltv.lifetime_months).toFixed(1)}} months 
+                </div>
+              </div>
+              <div class="text-gray-500 grid grid-cols-3 border-b border-dashed border-gray-500 mt-4">
+                <div class="col-span-1">
+                  <div class="inline">
+                    CLV
+                  </div>
+                   <Popper class="inline" hover>
+                    <QuestionMarkCircleIcon class="mb-1 inline h-5 w-5 text-gray-500" aria-hidden="true" />
+                    <template #content>
+                      <div class="bg-gray-700 text-gray-100 px-3 py-2 rounded">Customer lifetime value</div>
+                    </template>
+                  </Popper>
+                </div>
+                <div class="col-span-1">
+                  
+                </div>
+                <div class="col-span-1 text-right">
+                  {{ssfFormatter('$#,##0', storeState.metricData.ltv.clv)}}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-span-2">
+            <div id="retention" class="hover:bg-gray-800">
+              retention
+            </div>
           </div>
         </div>
         <div>
@@ -122,6 +210,7 @@ import { reactive, ref } from 'vue'
 import { Switch, SwitchGroup, SwitchLabel } from '@headlessui/vue'
 import axios from 'axios';
 import * as vega from "vega";
+import SSF from 'ssf'
 // import embed from 'vega-embed';
 // import * as embed from "vega-embed";
 // embed = require('vega-embed')
@@ -129,7 +218,9 @@ import * as vega from "vega";
 import { Grid, html } from "gridjs";
 // import "gridjs/dist/theme/mermaid.css";
 
-import { ArrowSmUpIcon, ArrowSmDownIcon } from '@heroicons/vue/solid'
+import { ArrowSmUpIcon, ArrowSmDownIcon, QuestionMarkCircleIcon } from '@heroicons/vue/solid'
+
+import Popper from "vue3-popper";
 
 export default {
   name: 'Metrics',
@@ -139,6 +230,8 @@ export default {
   components: {
     ArrowSmUpIcon,
     ArrowSmDownIcon,
+    QuestionMarkCircleIcon,
+    Popper
     // Switch,
     // SwitchGroup,
     // SwitchLabel,
@@ -438,6 +531,7 @@ export default {
         actions: false,
         tooltip: {theme: 'custom'},
         }
+      this.createRetentionChart()
       // let mrr = this.deepCopy(this.vegaSpec)
       // mrr.data.values = this.storeState.metricData.data
       // window.vegaEmbed('#mrr', mrr, opts);
@@ -670,6 +764,54 @@ export default {
       }
       window.vegaEmbed('#churn', churn, opts);
     },
+    createRetentionChart() {
+      let opts = {
+        config: this.vegaConfig,
+        actions: false,
+        tooltip: {theme: 'custom'},
+      }
+      let vegaSpec = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        data: {values: this.storeState.metricData.retention},
+        "transform": [
+          {
+            // "aggregate": [{"revenue_retention": "count", "as": "revenue_retention"}],
+            "groupby": ["vintage", "vintage_age"]
+          }
+        ],
+        "encoding": {
+          "y": {"field": "vintage", "type": "ordinal"},
+          "x": {"field": "vintage_age", "type": "ordinal"}
+        },
+        "layer": [
+          {
+            "mark": "rect",
+            "encoding": {
+              "color": {
+                "field": "revenue_retention",
+                "type": "quantitative",
+                "title": "Revenue Retention",
+                "legend": {"direction": "horizontal", "gradientLength": 120}
+              }
+            }
+          },
+          {
+            "mark": "text",
+            "encoding": {
+              "text": {"field": "revenue_retention", "type": "quantitative"},
+              "color": {
+                "condition": {"test": "datum['revenue_retention'] < .5", "value": "black"},
+                "value": "white"
+              }
+            }
+          }
+        ],
+        "config": {
+          "axis": {"grid": true, "tickBand": "extent"}
+        }
+      }
+      window.vegaEmbed('#retention', vegaSpec, opts);
+    },
     deepCopy(c) {
       return JSON.parse(JSON.stringify(c))
     },
@@ -733,8 +875,9 @@ export default {
         month+=1
       }
     },
-    formatMoney(m) {
-      return (m / 1000).toFixed(1)
+    ssfFormatter(format, val) {
+      // return (m / 1000).toFixed(1)
+      return SSF.format(format, val)
     },
   },
   watch: {

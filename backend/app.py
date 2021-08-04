@@ -436,9 +436,77 @@ def get_metrics():
     df = pd.read_sql(sql, db.engine)
     piv = df.pivot_table(index='mrr_month_dt', values=['mrr', 'active', 'churned_mrr'], aggfunc='sum')
     df = json.loads(df.to_json(orient='records'))
+    sql = '''
+    with c1 as (
+        select 
+        sum(mrr.churned_mrr) / (sum(mrr.mrr) / 3) as churn_rate,
+        sum(mrr.churned_mrr) as churned_mrr,
+        sum(mrr.mrr) as mrr,
+        avg(mrr.mrr) as avg_mrr,
+        sum(mrr.mrr) / count(1) as arpu
+        
+        from 
+        "team_{teamId}_stripe".mrr_facts as mrr
+        where mrr.current_month = 0
+        and mrr.mrr_month_dt > current_timestamp - interval '4 months'
+    )
+    select 
+    *, 
+    100 / (churn_rate*100) as lifetime_months,
+    100 / (churn_rate*100) * avg_mrr as clv
+    from c1;
+    '''.format(teamId=user['team_id'])
+    ltv = pd.read_sql(sql, db.engine)
+    ltv = json.loads(ltv.to_json(orient='records'))[0]
+    sql = '''
+    with mrr as (
+        select
+        mrr.mrr_month_dt,
+        mrr.customer_created_on,
+        date_trunc('month', mrr.customer_created_on)::date::text as vintage,
+        vintage_age,
+        mrr.mrr
+        from 
+        "team_{teamId}_stripe".mrr_facts as mrr
+        where customer_created_on > (current_timestamp - interval '13 months')
+    ), vintage_start as (
+        select
+        vintage,
+        sum(mrr.mrr) as starting_mrr,
+        count(1) as starting_customers
+        from 
+        mrr as mrr
+        where mrr.vintage_age = 0
+        group by 1
+    ), vintage_perf as (
+        select
+        vintage,
+        vintage_age,
+        sum(mrr.mrr) as mrr,
+        count(1) as customers
+        from 
+        mrr as mrr
+        group by 1, 2
+    )
+    select 
+    vp.vintage, 
+    vp.vintage_age,
+    vp.customers,
+    vp.mrr,
+    (vp.mrr * 100.0 / vs.starting_mrr) / 100 as revenue_retention,
+    (vp.customers * 100.0 / vs.starting_customers) / 100 as customer_retention
+    from vintage_perf vp join
+    vintage_start as vs on vp.vintage = vs.vintage
+    order by vp.vintage, vp.vintage_age
+    '''.format(teamId=user['team_id'])
+    retention = pd.read_sql(sql, db.engine)
+    retention = json.loads(retention.to_json(orient='records'))
+
     ret = {
         'ok': True, 
         'data': df,
+        'ltv': ltv,
+        'retention': retention,
         'summary': piv.tail(3).to_dict(orient='records')
         }
     return json.dumps(ret), 200, {'ContentType':'application/json'}

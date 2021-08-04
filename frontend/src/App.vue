@@ -107,9 +107,20 @@
                 <img class="h-8 w-auto" src="/paper-white-logo.png" alt="Logo">
               </div>
               <nav aria-label="Sidebar" class="py-6 flex flex-col items-center space-y-3">
-                <div @click="navClick(item)" v-for="item in navigation.filter(nav => true === storeState.user.hasStripe)" :key="item.name" class="cursor-pointer flex items-center p-4 rounded-lg text-gray-100 hover:bg-gray-700">
-                  <component :is="item.icon" class="h-6 w-6" aria-hidden="true" />
-                  <span class="sr-only">{{ item.name }}</span>
+                <div 
+                  @click="navClick(item)" 
+                  v-for="item in navigation.filter(nav => true === storeState.user.hasStripe)" 
+                  :key="item.name" 
+                  class="cursor-pointer flex items-center p-4 rounded-lg text-gray-100 hover:bg-gray-700"
+                >
+                  <Popper class="inline" hover placement="right">
+                    <component :is="item.icon" class="h-6 w-6" aria-hidden="true" />
+                    <template #content>
+                      <div class="bg-gray-700 text-gray-100 ml-4 px-3 py-2 rounded">{{ item.name }}</div>
+                      <!-- <span class="sr-only"></span> -->
+                    </template>
+                    
+                  </Popper>
                 </div>
               </nav>
             </div>
@@ -203,7 +214,6 @@
                 </div>
                 <div class="flex justify-center space-y-8 w-full pt-8">
                   <div class="relative">
-                    <!-- <img class="mx-auto h-8" src="https://tailwindui.com/img/logos/workcation-logo-indigo-600-mark-gray-800-and-indigo-600-text.svg" alt="Workcation" /> -->
                     <blockquote class="mt-10">
                       <div class="max-w-3xl mx-auto text-center text-2xl leading-9 font-medium text-gray-500">
                         <p>
@@ -285,6 +295,8 @@ import axios from 'axios';
 import { store } from './store.js';
 import { Magic } from 'magic-sdk';
 import { ref } from 'vue'
+import Popper from "vue3-popper";
+
 import { 
   Dialog, 
   DialogOverlay, 
@@ -318,6 +330,7 @@ export default {
       msg: String
   },
   components: {
+    Popper,
     CheckCircleIcon,
     ExclamationCircleIcon,
     Dialog,

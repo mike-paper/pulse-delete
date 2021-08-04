@@ -30,7 +30,8 @@
     "vega-lite": "^5.1.0",
     "vue": "^3.0.5",
     "vue-currency-input": "2.0.0-rc.1",
-    "vue-router": "4"
+    "vue-router": "4",
+    "vue3-popper": "^1.2.0"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",

@@ -26,7 +26,7 @@
               <SearchIcon class="flex-shrink-0 h-5 w-5 hover:text-gray-200 text-gray-600" aria-hidden="true" />
             </div> -->
             <div class="mr-4 cursor-pointer absolute inset-y-0 right-0 flex items-center">
-              <TerminalIcon @click="storeState.analysis.mode = 'sql'" class="flex-shrink-0 h-5 w-5 hover:text-gray-200 text-gray-600" aria-hidden="true" />
+              <TerminalIcon @click="flipMode('sql')" class="flex-shrink-0 h-5 w-5 hover:text-gray-200 text-gray-600" aria-hidden="true" />
             </div>
           </div>
           <div v-else class="relative w-full text-gray-400 focus-within:text-gray-600">
@@ -41,7 +41,7 @@
             >
             </textarea>
             <div class="mr-4 absolute inset-y-0 right-0 flex mt-2">
-              <SearchIcon @click="storeState.analysis.mode = 'search'" class="cursor-pointer flex-shrink-0 h-5 w-5" aria-hidden="true" />
+              <SearchIcon @click="flipMode('search')" class="cursor-pointer flex-shrink-0 h-5 w-5" aria-hidden="true" />
             </div>
           </div>
         </div>
@@ -584,6 +584,12 @@ export default {
     },
     logout() {
       this.$router.push({ name: 'Logout', query: { goto: 'Landing' }})
+    },
+    flipMode(mode) {
+      this.storeState.analysis.mode = mode
+      if (mode === 'sql') {
+        this.storeState.analysis.viz.type = 'grid'
+      }
     },
     checkUrl() {
       if (this.$route.query.table) {

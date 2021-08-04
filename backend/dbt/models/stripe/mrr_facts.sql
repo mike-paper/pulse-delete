@@ -142,6 +142,9 @@ with annuals as (
 
 select 
 mrr.*,
+date_trunc('month', mrr.customer_created_on)::date::text as vintage,
+(extract(year from age(mrr.mrr_month_dt, date_trunc('month', mrr.customer_created_on))) * 12 +
+	extract(month from age(mrr.mrr_month_dt, date_trunc('month', mrr.customer_created_on)))) as vintage_age,
 case 
 when mrr.mrr_month_dt = max_month.mrr_month_dt then 1
 else 0 end as current_month,
