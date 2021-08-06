@@ -175,13 +175,74 @@
               </div>
             </div>
           </div>
-          <div class="col-span-2">
-            <div id="retention" class="hover:bg-gray-800">
-              retention
+          <div class="hover:bg-gray-800">
+            <div class="px-4 py-5 sm:p-6 hover:bg-gray-800">
+              <div class="text-base font-normal text-gray-500">
+                Revenue Retention by Cohort
+              </div>
+              <div id="retention" class="hover:bg-gray-800 w-full">
+                retention
+              </div>
+            </div>
+          </div>
+          <div class="hover:bg-gray-800">
+            <div class="px-4 py-5 sm:p-6 hover:bg-gray-800">
+              <div class="text-base font-normal text-gray-500">
+                Customer Retention by Cohort
+              </div>
+              <div id="customerRetention" class="hover:bg-gray-800 w-full">
+                customer retention
+              </div>
             </div>
           </div>
         </div>
-        <div>
+        <!-- feed / event cards -->
+        <div 
+          class="grid bg-gray-900 overflow-hidden divide-y divide-gray-800 md:grid-cols-3 md:divide-y-0 md:divide-x"
+        >
+          <div 
+            class="col-span-1"
+            v-for="(event, index) in storeState.events.data.slice(0, 20)" 
+            :key="index"
+          >
+            <div 
+              class="px-4 py-5 sm:p-6 relative group cursor-pointer"
+              @click="openEvent(event)"
+              @mouseenter="event.hovering=true"
+              @mouseleave="event.hovering=false"
+            >
+              <component 
+                :is="getEventIcon(event.event_type)" 
+                class="absolute bg-gray-100 left-0 ml-4 mt-4 rounded-full top-0 w-6 h-6" 
+                :class="getEventIconClass(event)"
+                aria-hidden="true" 
+              />
+              <!-- <XCircleIcon 
+                v-if="event.event_type"
+                class="absolute bg-gray-100 left-0 ml-4 mt-4 rounded-full text-red-500 top-0 w-6 h-6" 
+                aria-hidden="true" 
+              /> -->
+              <div class="border h-32 p-4 rounded hover:bg-gray-800">
+                <div class="flex justify-between">
+                  <div class="font-bold text-gray-100 ">
+                    {{getEventName(event.event_type)}} 
+                  </div>
+                  <div class="text-gray-500 font text-sm">
+                    {{timeSince(event.created_on)}} ago
+                  </div>
+                </div>
+                <!-- <div>
+                  {{event.event_id}} 
+                </div> -->
+                <div id="retention" class="text-gray-500">
+                  <!-- {{Object.keys(event.data)}} -->
+                  {{getEventDetails(event)}} 
+                  <!-- {{event.event}} -->
+                </div>
+              </div>
+              
+            </div>
+          </div>
         </div>
         
       </div>
@@ -197,7 +258,7 @@
         </SwitchGroup>
       </div> -->
       <div id="customerTable">
-        
+        <!-- {{storeState.events.data}} -->
       </div>
     </div>
   </div>
@@ -218,7 +279,14 @@ import SSF from 'ssf'
 import { Grid, html } from "gridjs";
 // import "gridjs/dist/theme/mermaid.css";
 
-import { ArrowSmUpIcon, ArrowSmDownIcon, QuestionMarkCircleIcon } from '@heroicons/vue/solid'
+import { 
+  ArrowSmUpIcon, 
+  ArrowSmDownIcon, 
+  QuestionMarkCircleIcon, 
+  XCircleIcon, 
+  ExclamationCircleIcon, 
+  CheckCircleIcon 
+  } from '@heroicons/vue/solid'
 
 import Popper from "vue3-popper";
 
@@ -231,6 +299,9 @@ export default {
     ArrowSmUpIcon,
     ArrowSmDownIcon,
     QuestionMarkCircleIcon,
+    XCircleIcon,
+    CheckCircleIcon,
+    ExclamationCircleIcon,
     Popper
     // Switch,
     // SwitchGroup,
@@ -330,6 +401,13 @@ export default {
         tableFilters: {
           active: false,
         },
+        eventLkup: {
+          'customer.subscription.deleted': {name: 'Subscription Canceled', icon: XCircleIcon}, 
+          'customer.subscription.created': {name: 'Subscription Created', icon: CheckCircleIcon, className: 'text-green-500'}, 
+          'invoice.payment_action_required': {name: 'Payment Action Required', icon: ExclamationCircleIcon, className: 'text-yellow-500'},
+          'invoice.voided': {name: 'Invoice Voided', icon: XCircleIcon},
+          'invoice.payment_failed': {name: 'Payment Failed', icon: XCircleIcon},
+        },
         // metricData: [],
         stats: [
           { name: 'Total Subscribers', stat: '71,897', previousStat: '70,946', change: '12%', changeType: 'increase' },
@@ -392,6 +470,57 @@ export default {
     },
     goToAnalyze() {
       this.$router.push({ name: 'Analyze', query: { uuid: 'mrrchart' }})
+    },
+    openEvent(event) {
+      let url = `https://dashboard.stripe.com/events/${event.event_id}`
+      window.open(url, '_blank');
+    },
+    getEventName(eventType) {
+      return this.eventLkup[eventType].name
+    },
+    getEventIcon(eventType) {
+      return this.eventLkup[eventType].icon
+    },
+    getEventIconClass(event) {
+      if (!event.hovering) return 'text-gray-900'
+      if (this.eventLkup[event.event_type].className) return this.eventLkup[event.event_type].className
+      return 'text-red-500'
+    },
+    getEventDetails(event) {
+      if (event.event_type == 'invoice.payment_failed') {
+        return `${event.email} failed for $${event.event.amount_due / 100}`
+      }
+      if (event.event_type == 'customer.subscription.created') {
+        return `${event.email} created a subscription for $${event.event.plan.amount / 100} (${event.event.plan.name})`
+      }
+      if (event.event_type == 'customer.subscription.deleted') {
+        return `${event.email} canceled a subscription for $${event.event.plan.amount / 100} (${event.event.plan.name})`
+      }
+      return `${JSON.stringify(event)}`
+    },
+    timeSince(date) {
+      var seconds = Math.floor((new Date() - date) / 1000);
+      var interval = seconds / 31536000;
+      if (interval > 1) {
+        return Math.floor(interval) + " years";
+      }
+      interval = seconds / 2592000;
+      if (interval > 1) {
+        return Math.floor(interval) + " months";
+      }
+      interval = seconds / 86400;
+      if (interval > 1) {
+        return Math.floor(interval) + " days";
+      }
+      interval = seconds / 3600;
+      if (interval > 1) {
+        return Math.floor(interval) + " hours";
+      }
+      interval = seconds / 60;
+      if (interval > 1) {
+        return Math.floor(interval) + " minutes";
+      }
+      return Math.floor(seconds) + " seconds";
     },
     generateDemoTable() {
       new Grid({
@@ -532,6 +661,7 @@ export default {
         tooltip: {theme: 'custom'},
         }
       this.createRetentionChart()
+      this.createCustomerRetentionChart()
       // let mrr = this.deepCopy(this.vegaSpec)
       // mrr.data.values = this.storeState.metricData.data
       // window.vegaEmbed('#mrr', mrr, opts);
@@ -773,44 +903,156 @@ export default {
       let vegaSpec = {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
         data: {values: this.storeState.metricData.retention},
-        "transform": [
-          {
+        // "transform": [
+          // {
             // "aggregate": [{"revenue_retention": "count", "as": "revenue_retention"}],
-            "groupby": ["vintage", "vintage_age"]
-          }
-        ],
+            // "groupby": ["vintage", "vintage_age"]
+          // }
+        // ],
+        "height": {"step": 12},
+        "width": "container",
+        "description": "Revenue Retention",
         "encoding": {
-          "y": {"field": "vintage", "type": "ordinal"},
-          "x": {"field": "vintage_age", "type": "ordinal"}
+          "y": {
+            "field": "vintage", 
+            "type": "ordinal", 
+            "axis": {
+              "labels": false, 
+              title: null, 
+              }
+            },
+          "x": {
+            "field": "vintage_age", 
+            "type": "ordinal", 
+            "axis": {
+              "labels": true, 
+              title: null, 
+              }
+            }
         },
         "layer": [
           {
-            "mark": "rect",
+            "mark": {
+              "type": "rect",
+              // "height": 10,
+            },
             "encoding": {
               "color": {
                 "field": "revenue_retention",
+                "scale": {"scheme": "greens"},
                 "type": "quantitative",
                 "title": "Revenue Retention",
-                "legend": {"direction": "horizontal", "gradientLength": 120}
-              }
-            }
+                "legend": false
+              },
+              "tooltip": [
+                {
+                  "field": "vintage", 
+                  "timeUnit": "yearmonth", 
+                  "title": "Cohort"
+                },
+                {
+                  "field": "revenue_retention_text", 
+                  "type": "quantitative",
+                  "title": "Retention %"
+                },
+                {
+                  "field": "vintage_age", 
+                  "type": "quantitative",
+                  "title": "Age (Months)"
+                }
+              ]
+            },
           },
-          {
-            "mark": "text",
-            "encoding": {
-              "text": {"field": "revenue_retention", "type": "quantitative"},
-              "color": {
-                "condition": {"test": "datum['revenue_retention'] < .5", "value": "black"},
-                "value": "white"
-              }
-            }
-          }
         ],
         "config": {
-          "axis": {"grid": true, "tickBand": "extent"}
+          "axis": {
+            "grid": true,
+            "tickBand": "extent",
+            "gridOpacity": 0.2,
+            }
         }
       }
       window.vegaEmbed('#retention', vegaSpec, opts);
+    },
+    createCustomerRetentionChart() {
+      let opts = {
+        config: this.vegaConfig,
+        actions: false,
+        tooltip: {theme: 'custom'},
+      }
+      let vegaSpec = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        data: {values: this.storeState.metricData.retention},
+        // "transform": [
+          // {
+            // "aggregate": [{"revenue_retention": "count", "as": "revenue_retention"}],
+            // "groupby": ["vintage", "vintage_age"]
+          // }
+        // ],
+        "height": {"step": 12},
+        "width": "container",
+        "description": "Customer Retention",
+        "encoding": {
+          "y": {
+            "field": "vintage", 
+            "type": "ordinal", 
+            "axis": {
+              "labels": false, 
+              title: null, 
+              }
+            },
+          "x": {
+            "field": "vintage_age", 
+            "type": "ordinal", 
+            "axis": {
+              "labels": true, 
+              title: null, 
+              }
+            }
+        },
+        "layer": [
+          {
+            "mark": {
+              "type": "rect",
+              // "height": 10,
+            },
+            "encoding": {
+              "color": {
+                "field": "customer_retention",
+                "scale": {"scheme": "greens"},
+                "type": "quantitative",
+                "title": "Revenue Retention",
+                "legend": false
+              },
+              "tooltip": [
+                {
+                  "field": "vintage", 
+                  "timeUnit": "yearmonth", 
+                  "title": "Cohort"
+                },
+                {
+                  "field": "customer_retention_text", 
+                  "type": "quantitative",
+                  "title": "Retention %"
+                },
+                {
+                  "field": "vintage_age", 
+                  "type": "quantitative",
+                  "title": "Age (Months)"
+                }
+              ]
+            },
+          },
+        ],
+        "config": {
+          "axis": {
+            "grid": true,
+            "tickBand": "extent",
+            "gridOpacity": 0.2,
+            }
+        }
+      }
+      window.vegaEmbed('#customerRetention', vegaSpec, opts);
     },
     deepCopy(c) {
       return JSON.parse(JSON.stringify(c))
@@ -883,7 +1125,7 @@ export default {
   watch: {
     'tableFilters': {
         handler: function () {
-          this.createCustomerTable()
+          // this.createCustomerTable()
         },
         deep: true
     },

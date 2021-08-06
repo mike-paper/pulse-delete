@@ -232,7 +232,7 @@
                               <path d="M11 0h3L9 20H6l5-20z" />
                             </svg>
 
-                            <div class="text-base font-medium text-gray-700">Boxer</div>
+                            <div class="text-base font-medium text-gray-700">Professional Boxer</div>
                           </div>
                         </div>
                       </footer>
@@ -486,7 +486,7 @@ export default {
     },
     getMetrics() {
       console.log('getMetrics...')
-      this.gotMetrics = false
+      this.storeState.gotMetrics = false
       const path = this.getApiUrl('get_metrics')
       let d = {user: this.storeState.user, userData: this.storeState.userData}
       axios.post(path, d)
@@ -497,6 +497,28 @@ export default {
           // this.storeState.metricData = reactive(res.data)
           this.storeState.metricData = res.data
           this.emitter.emit('got-metrics');
+          
+          // this.createCharts()
+          // var self = this
+          // setTimeout(() => self.createCustomerTable(), 0);
+        })
+        .catch((error) => {
+          console.error(error)
+        })
+    },
+    getEvents() {
+      console.log('getEvents...')
+      this.storeState.gotEvents = false
+      const path = this.getApiUrl('get_events')
+      let d = {user: this.storeState.user, userData: this.storeState.userData}
+      axios.post(path, d)
+        .then((res) => {
+          console.log('got get_events: ', res.data)
+          this.storeState.gotEvents = true
+          // this.$forceUpdate()
+          // this.storeState.metricData = reactive(res.data)
+          this.storeState.events = res.data
+          this.emitter.emit('got-events');
           
           // this.createCharts()
           // var self = this
@@ -519,6 +541,7 @@ export default {
         this.getRecentJobs()
         this.checkUrl()
         this.getMetrics()
+        this.getEvents()
       } else {
         this.storeState.gotUserData = true
         this.$router.push({ name: 'Login'})

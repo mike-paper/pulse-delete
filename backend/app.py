@@ -96,7 +96,7 @@ def checkForTeam(engine, email, userId):
 
 # testStripe = pints.stripe.getObject(db.engine, 1, 'coupons')
 # testStripe = pints.stripe.getObject(db.engine, 1, 'invoices')
-# testStripe = pints.stripe.getAll(db.engine, 4)
+# testStripe = pints.stripe.getAll(db.engine, 5)
 # testStripe = pints.scheduler.testSched()
 # slackInfo = pints.postgres.getSlackInfo(db.engine, 5)
 # pints.slack.testPush({'msg': 'in summerrrrrr!!!!'}, slackInfo['bot_token'])
@@ -418,6 +418,28 @@ def update_user_data():
 #     details JSONB
 # );
 
+@app.route('/get_events', methods=["GET", "POST"])
+def get_events():
+    data = flask.request.get_json()
+    logger.info(f'get_events: {data}')
+    user = getUser(data)
+    logger.info(f'get_events user: {user}')
+    sql = '''
+    select 
+    *
+    from 
+    "team_{teamId}_stripe".events as e
+    order by e.created_on desc
+    limit 100
+    '''.format(teamId=user['team_id'])
+    df = pd.read_sql(sql, db.engine)
+    df = json.loads(df.to_json(orient='records'))
+    ret = {
+        'ok': True, 
+        'data': df,
+        }
+    return json.dumps(ret), 200, {'ContentType':'application/json'}
+
 @app.route('/get_metrics', methods=["GET", "POST"])
 def get_metrics():
     data = flask.request.get_json()
@@ -487,17 +509,22 @@ def get_metrics():
         from 
         mrr as mrr
         group by 1, 2
+    ), res as (
+        select 
+        vp.vintage, 
+        vp.vintage_age,
+        vp.customers,
+        vp.mrr,
+        (vp.mrr * 100.0 / vs.starting_mrr) / 100 as revenue_retention,
+        (vp.customers * 100.0 / vs.starting_customers) / 100 as customer_retention
+        from vintage_perf vp join
+        vintage_start as vs on vp.vintage = vs.vintage
+        order by vp.vintage, vp.vintage_age
     )
-    select 
-    vp.vintage, 
-    vp.vintage_age,
-    vp.customers,
-    vp.mrr,
-    (vp.mrr * 100.0 / vs.starting_mrr) / 100 as revenue_retention,
-    (vp.customers * 100.0 / vs.starting_customers) / 100 as customer_retention
-    from vintage_perf vp join
-    vintage_start as vs on vp.vintage = vs.vintage
-    order by vp.vintage, vp.vintage_age
+    select *,
+    round((revenue_retention*100)::decimal, 0)::text as revenue_retention_text,
+    round((customer_retention*100)::decimal, 0)::text as customer_retention_text
+    from res
     '''.format(teamId=user['team_id'])
     retention = pd.read_sql(sql, db.engine)
     retention = json.loads(retention.to_json(orient='records'))

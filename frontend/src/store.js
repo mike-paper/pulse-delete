@@ -9,7 +9,9 @@ export const store = {
       gotDbt: false,
       hideSidebar: false,
       gotMetrics: false,
+      gotEvents: false,
       metricData: {},
+      events: {},
       user: {
         oauth: false,
         hasStripe: false

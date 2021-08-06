@@ -34,15 +34,26 @@ objs = {
         'api': stripe.Customer,
         'expand': []
     },
-    # 'subscriptions': {
-    #     'api': stripe.Subscription,
-    #     'expand': [],
-    #     'all': True,
-    # },
-    # 'plans': {
-    #     'api': stripe.Plan,
-    #     'expand': []
-    # },
+    'subscriptions': {
+        'api': stripe.Subscription,
+        'expand': [],
+        'all': True,
+    },
+    'plans': {
+        'api': stripe.Plan,
+        'expand': []
+    },
+    'events': {
+        'api': stripe.Event,
+        'expand': [],
+        'types': [
+            'customer.subscription.deleted', 
+            'customer.subscription.created', 
+            'invoice.payment_action_required', 
+            'invoice.voided', 
+            'invoice.payment_failed'
+            ]
+    },
     'invoices': {
         'api': stripe.Invoice,
         'expand': ['data.discounts']
@@ -59,12 +70,20 @@ def testKey(apiKey):
 def getAll(engine, teamId):
     jobUuids = []
     for key, obj in objs.items():
-        jobUuid = uuid.uuid4().hex
-        jobUuids.append(jobUuid)
-        longrun.submit(getObject, engine, teamId, jobUuid, key)
+        logger.info(f'getAll: {key}')
+        if key == 'events':
+            for t in obj['types']:
+                logger.info(f'event: {t}')
+                jobUuid = uuid.uuid4().hex
+                jobUuids.append(jobUuid)
+                longrun.submit(getObject, engine, teamId, jobUuid, key, eventType=t)
+        else:
+            jobUuid = uuid.uuid4().hex
+            jobUuids.append(jobUuid)
+            longrun.submit(getObject, engine, teamId, jobUuid, key)
     return jobUuids
 
-def getObject(engine, teamId, jobUuid, obj):
+def getObject(engine, teamId, jobUuid, obj, eventType=None):
     job = {
         'type': 'stripe',
         'operation': 'getObject',
@@ -82,7 +101,10 @@ def getObject(engine, teamId, jobUuid, obj):
         else:
             mr = pints.postgres.getMaxRecord(engine, table, teamId)
         logger.info(f'{obj} mr: {mr}')
-        if mr:
+        if eventType:
+            logger.info(f'{obj} with mr: {mr}')
+            temp = objs[obj]['api'].list(limit=100, api_key=apiKey, created={'gt': mr}, type=eventType)
+        elif mr:
             logger.info(f'{obj} with mr: {mr}')
             temp = objs[obj]['api'].list(limit=100, api_key=apiKey, created={'gt': mr}, expand=objs[obj]['expand'])
         elif getAll:
@@ -99,6 +121,7 @@ def getObject(engine, teamId, jobUuid, obj):
         pints.postgres.insertRows(engine, table, ls, teamId)
         logger.info(f'done inserting rows for {obj} ({len(ls)} rows)')
     except Exception as e:
+        logger.error(f'getObject error {str(e)}')
         job['status'] = 'error'
         job['error'] = str(e)
         jobId = pints.postgres.updateJob(engine, teamId, jobId, jobUuid, job)
