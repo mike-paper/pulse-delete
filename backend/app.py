@@ -14,28 +14,13 @@ import yaml
 import subprocess
 
 from magic_admin import Magic
-# A util provided by `magic_admin` to parse the auth header value.
-from magic_admin.utils.http import parse_authorization_header_value
 from magic_admin.error import DIDTokenError
 from magic_admin.error import RequestError
-
-# import selenium.webdriver
-
-# chrome_options = webdriver.ChromeOptions()
-# chrome_options.add_argument('--no-sandbox')
-# chrome_options.add_argument('--window-size=1420,1080')
-# chrome_options.add_argument('--headless')
-# chrome_options.add_argument('--disable-gpu')
-# driver = webdriver.Chrome(chrome_options=chrome_options)
-# chromedriver
-# driver = webdriver.Chrome('/chromedriver/chromedriver')
-
 
 from logger import logger
 
 
 SQLALCHEMY_DATABASE_URI = os.environ.get('PAPER_SQLALCHEMY_DATABASE_URI')
-# PAPER_MAGIC_API_KEY = os.environ.get('PAPER_MAGIC_API_KEY')
 PAPER_MAGIC_SECRET_KEY = os.environ.get('PAPER_MAGIC_SECRET_KEY')
 # SQLALCHEMY_ECHO = True
 SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -83,35 +68,6 @@ def checkForTeam(engine, email, userId):
         dbUser = pints.postgres.createReadOnlyUser(engine, teamId)
         logger.info(f'dbUser user {dbUser}...')
     return True
-
-# with app.app_context():
-# scs = pints.stripe.getCustomers(db.engine, 3)
-
-# logger.info(f'scs len: {len(scs)}')
-# logger.info(f'scs: {scs}')
-
-# subs = pints.stripe.getSubscriptions(db.engine, 1)
-
-# logger.info(f'subs len: {len(subs)}')
-# logger.info(f'subs: {subs}')
-
-# subItems = pints.stripe.getSubscriptionItems(db.engine, 1)
-
-# logger.info(f'subItems len: {len(subItems)}')
-# logger.info(f'subItems: {subItems}')
-
-# testStripe = pints.stripe.getPlans(db.engine, 1)
-
-# testStripe = pints.stripe.getObject(db.engine, 1, 'coupons')
-# testStripe = pints.stripe.getObject(db.engine, 1, 'invoices')
-# testStripe = pints.stripe.getAll(db.engine, 4)
-# testStripe = pints.stripe.clearAll(db.engine, 4)
-# testStripe = pints.scheduler.testSched()
-# slackInfo = pints.postgres.getSlackInfo(db.engine, 5)
-# pints.slack.testPush({'msg': 'in summerrrrrr!!!!'}, slackInfo['bot_token'])
-
-# testUser = pints.postgres.createReadOnlyUser(db.engine, 5)
-# logger.info(f'testUser: {testUser}')
 
 @app.route('/ping', methods=["GET"])
 def ping():
