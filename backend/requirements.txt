@@ -16,6 +16,7 @@ pyyaml==5.4.1
 dbt-postgres==0.19.1
 cryptography==3.4.7
 apscheduler==3.7.0
+magic-admin==0.0.5
 
 # GOOGLE STUFF
 # oauth2client==4.1.2

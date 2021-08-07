@@ -536,6 +536,7 @@ export default {
       this.storeState.checkedLogin = true
       if (this.storeState.isLoggedIn) {
         this.storeState.user = await magic.user.getMetadata();
+        this.storeState.user.idToken = await magic.user.getIdToken();
         this.getUserData()
         this.getDbt()
         this.getRecentJobs()

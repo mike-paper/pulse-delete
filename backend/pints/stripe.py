@@ -83,6 +83,13 @@ def getAll(engine, teamId):
             longrun.submit(getObject, engine, teamId, jobUuid, key)
     return jobUuids
 
+def clearAll(engine, teamId):
+    for key, obj in objs.items():
+        table = f'stripe_{key}'
+        logger.info(f'clearAll: {key} {obj} {table}')
+        pints.postgres.deleteRows(engine, table, teamId)
+    return True
+
 def getObject(engine, teamId, jobUuid, obj, eventType=None):
     job = {
         'type': 'stripe',
@@ -137,9 +144,12 @@ def checkDbtRun(engine, teamId):
     logger.info(f'checkDbtRun {teamId}')
     running = pints.postgres.getJobSummary(engine, teamId)
     running = running[(running.status == 'running') & (running.type == 'stripe')]
-    logger.info(f'checkDbtRun running {running}')
+    logger.info(f'checkDbtRun, {running} still running...')
     if len(running) == 0:
         try:
+            logger.info(f'running dbt...')
             pints.modeling.runDbt(teamId)
         except Exception as e:
             logger.error(f'checkDbtRun error {str(e)}')
+    else:
+        logger.info(f'not running dbt.')

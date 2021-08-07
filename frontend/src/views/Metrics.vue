@@ -496,7 +496,7 @@ export default {
       if (event.event_type == 'customer.subscription.deleted') {
         return `${event.email} canceled a subscription for $${event.event.plan.amount / 100} (${event.event.plan.name})`
       }
-      return `${JSON.stringify(event)}`
+      return `${event.event_type} for ${event.email} (click for details)`
     },
     timeSince(date) {
       var seconds = Math.floor((new Date() - date) / 1000);
@@ -846,7 +846,7 @@ export default {
                   "aggregate": "sum", 
                   "type": "quantitative",
                   "format": "$,.0f",
-                  "title": "Customers"
+                  "title": "Churned MRR"
                 }
             ]
           },

@@ -13,6 +13,12 @@ import pandas as pd
 import yaml
 import subprocess
 
+from magic_admin import Magic
+# A util provided by `magic_admin` to parse the auth header value.
+from magic_admin.utils.http import parse_authorization_header_value
+from magic_admin.error import DIDTokenError
+from magic_admin.error import RequestError
+
 # import selenium.webdriver
 
 # chrome_options = webdriver.ChromeOptions()
@@ -29,6 +35,8 @@ from logger import logger
 
 
 SQLALCHEMY_DATABASE_URI = os.environ.get('PAPER_SQLALCHEMY_DATABASE_URI')
+# PAPER_MAGIC_API_KEY = os.environ.get('PAPER_MAGIC_API_KEY')
+PAPER_MAGIC_SECRET_KEY = os.environ.get('PAPER_MAGIC_SECRET_KEY')
 # SQLALCHEMY_ECHO = True
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -96,7 +104,8 @@ def checkForTeam(engine, email, userId):
 
 # testStripe = pints.stripe.getObject(db.engine, 1, 'coupons')
 # testStripe = pints.stripe.getObject(db.engine, 1, 'invoices')
-# testStripe = pints.stripe.getAll(db.engine, 5)
+# testStripe = pints.stripe.getAll(db.engine, 4)
+# testStripe = pints.stripe.clearAll(db.engine, 4)
 # testStripe = pints.scheduler.testSched()
 # slackInfo = pints.postgres.getSlackInfo(db.engine, 5)
 # pints.slack.testPush({'msg': 'in summerrrrrr!!!!'}, slackInfo['bot_token'])
@@ -286,13 +295,23 @@ def get_job():
 @app.route('/login', methods=["GET", "POST"])
 def login():
     data = flask.request.get_json()
-    email = data['email']
-    if not email:
+    email = data.get('email', None)
+    did_token = data.get('idToken', None)
+    if not email or not did_token:
         d = {
             'ok': False,
-            'new': False
+            'new': False,
+            'error': 'noAuth'
         }
         return json.dumps(d), 200, {'ContentType':'application/json'}
+    magic = Magic(api_secret_key=PAPER_MAGIC_SECRET_KEY)
+    try:
+        magic.Token.validate(did_token)
+        issuer = magic.Token.get_issuer(did_token)
+    except DIDTokenError as e:
+        logger.error(f'DID Token is invalid: {e}')
+    except RequestError as e:
+        logger.error(f'RequestError: {e}')
     publicAddress = data['publicAddress']
     sql = '''
     SELECT 
@@ -314,6 +333,17 @@ def login():
     df = pd.read_sql(sql, db.engine)
     if len(df) > 0:
         user = df.details[0]
+        validIssuer = user['issuer'] == issuer
+        if not validIssuer:
+            logger.info(f'Invalid issuer: {email} {issuer}')
+            d = {
+                'ok': False,
+                'new': False,
+                'user': False,
+                'error': 'invalid_issuer'
+                }
+            return json.dumps(d), 200, {'ContentType':'application/json'}
+        logger.info(f'issuer {issuer} is valid? {validIssuer}')
         user['settings'] = df.settings[0]
         user['hasStripe'] = bool(df.has_stripe[0] > 0)
         d = {
